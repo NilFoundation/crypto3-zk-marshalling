@@ -123,22 +123,24 @@ namespace nil {
                 typename flat_pow_operation<nil::marshalling::field_type<Endianness>>::type
                     fill_power_operation(const math::flat_pow_operation& power_op) {
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
-                    return std::make_tuple(
-                        nil::marshalling::types::integral<TTypeBase, std::int64_t>(power_op.power),
-                        nil::marshalling::types::integral<TTypeBase, std::uint8_t>(power_op.type),
-                        nil::marshalling::types::integral<TTypeBase, std::size_t>(power_op.child_index));
+                    return typename flat_pow_operation<nil::marshalling::field_type<Endianness>>::type(
+                        std::make_tuple(
+                            nil::marshalling::types::integral<TTypeBase, std::int64_t>(power_op.power),
+                            nil::marshalling::types::integral<TTypeBase, std::uint8_t>((std::uint8_t)power_op.type),
+                            nil::marshalling::types::integral<TTypeBase, std::size_t>(power_op.child_index)));
                 }
 
                 template<typename Endianness>
                 typename flat_binary_arithmetic_operation<nil::marshalling::field_type<Endianness>>::type
                     fill_binary_operation(const math::flat_binary_arithmetic_operation& bin_op) {
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
-                    return std::make_tuple(
-                        nil::marshalling::types::integral<TTypeBase, std::uint8_t>(bin_op.op),
-                        nil::marshalling::types::integral<TTypeBase, std::uint8_t>(bin_op.left_type),
-                        nil::marshalling::types::integral<TTypeBase, std::size_t>(bin_op.left_index), 
-                        nil::marshalling::types::integral<TTypeBase, std::uint8_t>(bin_op.right_type),
-                        nil::marshalling::types::integral<TTypeBase, std::size_t>(bin_op.right_index));
+                    return typename flat_binary_arithmetic_operation<nil::marshalling::field_type<Endianness>>::type(
+                        std::make_tuple(
+                            nil::marshalling::types::integral<TTypeBase, std::uint8_t>((std::uint8_t)bin_op.op),
+                            nil::marshalling::types::integral<TTypeBase, std::uint8_t>((std::uint8_t)bin_op.left_type),
+                            nil::marshalling::types::integral<TTypeBase, std::size_t>(bin_op.left_index), 
+                            nil::marshalling::types::integral<TTypeBase, std::uint8_t>((std::uint8_t)bin_op.right_type),
+                            nil::marshalling::types::integral<TTypeBase, std::size_t>(bin_op.right_index)));
                 }
 
 
@@ -181,7 +183,8 @@ namespace nil {
                             fill_binary_operation<Endianness>(bin_op));
                     }
 
-                    return std::make_tuple(filled_terms, filled_powers, filled_binary_opeations);
+                    return typename expression<nil::marshalling::field_type<Endianness>, Expression>::type(
+                        std::make_tuple(filled_terms, filled_powers, filled_binary_opeations));
                 }
 
                 template<typename Endianness>
@@ -189,7 +192,7 @@ namespace nil {
                     make_power_operation(const typename flat_pow_operation<nil::marshalling::field_type<Endianness>>::type& filled_power_op) {
                     math::flat_pow_operation power_op;
                     power_op.power = std::get<0>(filled_power_op.value()).value();
-                    power_op.type = std::get<1>(filled_power_op.value()).value();
+                    power_op.type = static_cast<math::flat_node_type>(std::get<1>(filled_power_op.value()).value());
                     power_op.child_index = std::get<2>(filled_power_op.value()).value();
                     return power_op;
                 }
@@ -198,10 +201,10 @@ namespace nil {
                 math::flat_binary_arithmetic_operation
                     make_binary_operation(const typename flat_binary_arithmetic_operation<nil::marshalling::field_type<Endianness>>::type& filled_power_op) {
                     math::flat_binary_arithmetic_operation bin_op;
-                    bin_op.op = std::get<0>(filled_power_op.value()).value();
-                    bin_op.left_type = std::get<1>(filled_power_op.value()).value();
+                    bin_op.op = static_cast<math::ArithmeticOperator>(std::get<0>(filled_power_op.value()).value());
+                    bin_op.left_type = static_cast<math::flat_node_type>(std::get<1>(filled_power_op.value()).value());
                     bin_op.left_index = std::get<2>(filled_power_op.value()).value();
-                    bin_op.right_type = std::get<3>(filled_power_op.value()).value();
+                    bin_op.right_type = static_cast<math::flat_node_type>(std::get<3>(filled_power_op.value()).value());
                     bin_op.right_index = std::get<4>(filled_power_op.value()).value();
                     return bin_op;
                 }

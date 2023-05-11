@@ -71,7 +71,7 @@ namespace nil {
 
                 /*********************** Plonk lookup constraint ****************************/
                 template<typename TTypeBase, typename PlonkLookupConstraint>
-                using plonk_lookup_constraint =  nil::marshalling::types::bundle<
+                using plonk_lookup_constraint = nil::marshalling::types::bundle<
                     TTypeBase, std::tuple<                  
                         // std::vector<math::term<VariableType>> lookup_input;          
                         nil::marshalling::types::array_list<

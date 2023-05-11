@@ -69,63 +69,18 @@ void print_field_element(std::ostream &os,
 }
 
 template<typename Field>
-bool are_variables_equal(const nil::crypto3::zk::snark::plonk_variable<Field> &lhs,
-                         const nil::crypto3::zk::snark::plonk_variable<Field> &rhs) {
-    if (lhs.index != rhs.index)
-        return false;
-    if (lhs.relative != rhs.relative)
-        return false;
-    if (lhs.rotation != rhs.rotation)
-        return false;
-    if (lhs.type != rhs.type)
-        return false;
-    return true;
-}
-
-template<typename Field>
-bool are_terms_equal(
-    const nil::crypto3::math::term<nil::crypto3::zk::snark::plonk_variable<Field>> &lhs,
-    const nil::crypto3::math::term<nil::crypto3::zk::snark::plonk_variable<Field>> &rhs) {
-    if (lhs.coeff != rhs.coeff) {
-        return false;
-    }
-    if (lhs.vars.size() != rhs.vars.size()) {
-        return false;
-    }
-    for (auto i = 0; i < lhs.vars.size(); i++) {
-        if (!are_variables_equal(lhs.vars[i], rhs.vars[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-template<typename Field>
-bool are_expressions_equal(
-    const nil::crypto3::math::expression<nil::crypto3::zk::snark::plonk_variable<Field>> &lhs,
-    const nil::crypto3::math::expression<nil::crypto3::zk::snark::plonk_variable<Field>> &rhs) {
-    if (lhs.terms.size() != rhs.terms.size())
-        return false;
-    for (auto i = 0; i < lhs.terms.size(); i++) {
-        if (!are_terms_equal(lhs.terms[i], rhs.terms[i]))
-            return false;
-    }
-    return true;
-}
-
-template<typename Field>
 bool are_lookup_constraints_equal(
     const nil::crypto3::zk::snark::plonk_lookup_constraint<Field> &lhs,
     const nil::crypto3::zk::snark::plonk_lookup_constraint<Field> &rhs
 ){
     if(lhs.lookup_input.size() != rhs.lookup_input.size() ) return false;
     for( size_t i = 0; i < lhs.lookup_input.size(); i++ ){
-        if(! are_terms_equal(lhs.lookup_input[i], rhs.lookup_input[i])) return false;
+        if(lhs.lookup_input[i] != rhs.lookup_input[i]) return false;
     }
 
     if(lhs.lookup_value.size() != rhs.lookup_value.size() ) return false;
     for( size_t i = 0; i < lhs.lookup_value.size(); i++ ){
-        if(!are_variables_equal(lhs.lookup_value[i], rhs.lookup_value[i])) return false;
+        if(lhs.lookup_value[i] != rhs.lookup_value[i]) return false;
     }
     return true;
 }
@@ -140,7 +95,7 @@ bool are_plonk_gates_equal(
     if (lhs.constraints.size() != rhs.constraints.size())
         return false;
     for (auto i = 0; i < lhs.constraints.size(); i++) {
-        if (!are_expressions_equal(lhs.constraints[i], rhs.constraints[i]))
+        if (lhs.constraints[i] == rhs.constraints[i])
             return false;
     }
     return true;
@@ -201,11 +156,11 @@ nil::crypto3::math::term<PlonkVariable> generate_random_plonk_term(std::size_t v
 template<typename PlonkVariable>
 nil::crypto3::math::expression<PlonkVariable>
     generate_random_plonk_expression(std::size_t vars_n, std::size_t terms_n) {
-    nil::crypto3::math::expression<PlonkVariable> comb;
-    for (auto i = 0; i < terms_n; i++) {
-        comb.terms.template emplace_back(generate_random_plonk_term<PlonkVariable>(vars_n));
+    nil::crypto3::math::expression<PlonkVariable> expr(generate_random_plonk_term<PlonkVariable>(vars_n));
+    for (auto i = 0; i < terms_n - 1; i++) {
+        expr += generate_random_plonk_term<PlonkVariable>(vars_n);
     }
-    return comb;
+    return expr;
 }
 
 template<typename Field>
@@ -266,7 +221,7 @@ void test_plonk_variable() {
 
     auto filled_val = nil::crypto3::marshalling::types::fill_variable<value_type, Endianness>(val);
     auto _val = types::make_variable<value_type, Endianness>(filled_val);
-    BOOST_CHECK(are_variables_equal(val, _val));
+    BOOST_CHECK(val == _val);
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_val.length(), 0x00);
@@ -279,7 +234,7 @@ void test_plonk_variable() {
     status = test_val_read.read(read_iter, cv.size());
     auto constructed_val_read = types::make_variable<value_type, Endianness>(test_val_read);
     BOOST_CHECK(val == constructed_val_read);
-    BOOST_CHECK(are_variables_equal(val, constructed_val_read));
+    BOOST_CHECK(val == constructed_val_read);
 }
 
 template<typename Field, typename Endianness>
@@ -299,7 +254,7 @@ void test_plonk_variables(std::size_t n) {
     auto _val = types::make_variables<value_type, Endianness>(filled_val);
     BOOST_CHECK(val.size() == _val.size());
     for( std::size_t i = 0; i < val.size(); i++ ){
-        BOOST_CHECK(are_variables_equal(val[i], _val[i]));
+        BOOST_CHECK(val[i] == _val[i]);
     }
 
     std::vector<std::uint8_t> cv;
@@ -314,7 +269,7 @@ void test_plonk_variables(std::size_t n) {
     auto constructed_val_read = types::make_variables<value_type, Endianness>(test_val_read);
     BOOST_CHECK(val.size() == _val.size());
     for( std::size_t i = 0; i < val.size(); i++ ){
-        BOOST_CHECK(are_variables_equal(val[i], _val[i]));
+        BOOST_CHECK(val[i] == _val[i]);
     }
 }
 
@@ -331,7 +286,7 @@ void test_plonk_term(std::size_t vars_n) {
 
     auto filled_val = types::fill_term<value_type, Endianness>(val);
     auto _val = types::make_term<value_type, Endianness>(filled_val);
-    BOOST_CHECK(are_terms_equal(val, _val));
+    BOOST_CHECK(val == _val);
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_val.length(), 0x00);
@@ -343,7 +298,7 @@ void test_plonk_term(std::size_t vars_n) {
     auto read_iter = cv.begin();
     status = test_val_read.read(read_iter, cv.size());
     auto constructed_val_read = types::make_term<value_type, Endianness>(test_val_read);
-    BOOST_CHECK(are_terms_equal(val, constructed_val_read));
+    BOOST_CHECK(val == constructed_val_read);
 }
 
 template<typename Field, typename Endianness>
@@ -359,7 +314,7 @@ void test_expression(std::size_t vars_n, std::size_t terms_n) {
 
     auto filled_val = types::fill_expression<value_type, Endianness>(val);
     auto _val = types::make_expression<value_type, Endianness>(filled_val);
-    BOOST_CHECK(are_expressions_equal(val, _val));
+    BOOST_CHECK(val == _val);
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_val.length(), 0x00);
@@ -371,7 +326,7 @@ void test_expression(std::size_t vars_n, std::size_t terms_n) {
     auto read_iter = cv.begin();
     status = test_val_read.read(read_iter, cv.size());
     auto constructed_val_read = types::make_expression<value_type, Endianness>(test_val_read);
-    BOOST_CHECK(are_expressions_equal(val, constructed_val_read));
+    BOOST_CHECK(val == constructed_val_read);
 }
 
 template<typename Field, typename Endianness>
@@ -386,7 +341,7 @@ void test_plonk_constraint(std::size_t vars_n, std::size_t terms_n) {
 
     auto filled_val = types::fill_plonk_constraint<value_type, Endianness>(val);
     auto _val = types::make_plonk_constraint<value_type, Endianness>(filled_val);
-    BOOST_CHECK(are_expressions_equal(val, _val));
+    BOOST_CHECK(val == _val);
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_val.length(), 0x00);
@@ -398,7 +353,7 @@ void test_plonk_constraint(std::size_t vars_n, std::size_t terms_n) {
     auto read_iter = cv.begin();
     status = test_val_read.read(read_iter, cv.size());
     auto constructed_val_read = types::make_plonk_constraint<value_type, Endianness>(test_val_read);
-    BOOST_CHECK(are_expressions_equal(val, constructed_val_read));
+    BOOST_CHECK(val == constructed_val_read);
 }
 
 template<typename Field, typename Endianness>
@@ -419,7 +374,7 @@ void test_plonk_constraints(std::size_t vars_n, std::size_t terms_n, std::size_t
     auto _val = types::make_plonk_constraints<constraint_type, Endianness>(filled_val);
     BOOST_CHECK(val.size() == _val.size());
     for( std::size_t i = 0; i < _val.size(); i++){
-        BOOST_CHECK(are_expressions_equal(val[i], _val[i]));
+        BOOST_CHECK(val[i] == _val[i]);
     }  
 
     std::vector<std::uint8_t> cv;
@@ -435,7 +390,7 @@ void test_plonk_constraints(std::size_t vars_n, std::size_t terms_n, std::size_t
 
     BOOST_CHECK(val.size() == constructed_val_read.size());
     for( std::size_t i = 0; i < val.size(); i++){
-        BOOST_CHECK(are_expressions_equal(val[i], constructed_val_read[i]));
+        BOOST_CHECK(val[i] == constructed_val_read[i]);
     }  
 }
     

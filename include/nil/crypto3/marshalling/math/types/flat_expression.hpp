@@ -35,10 +35,10 @@ namespace nil {
     namespace crypto3 {
         namespace math {
 
-            enum flat_node_type {
-                TERM,
-                POWER,
-                BINARY_ARITHMETIC
+            enum class flat_node_type : std::uint8_t {
+                TERM = 0,
+                POWER = 1,
+                BINARY_ARITHMETIC = 2
             };
 
             struct flat_pow_operation {
@@ -52,20 +52,20 @@ namespace nil {
             };
 
             struct flat_binary_arithmetic_operation {
-                    ArithmeticOperator op;
+                ArithmeticOperator op;
 
-                    // Type of the left base expression.
-                    flat_node_type left_type;
-                    // Index in corresponding array.
-                    // if type == TERM, then this is index in array 'terms'.
-                    std::size_t left_index;
+                // Type of the left base expression.
+                flat_node_type left_type;
+                // Index in corresponding array.
+                // if type == TERM, then this is index in array 'terms'.
+                std::size_t left_index;
 
-                    // Type of the right base expression.
-                    flat_node_type right_type;
-                    // Index in corresponding array.
-                    // if type == TERM, then this is index in array 'terms'.
-                    std::size_t right_index;
-                };
+                // Type of the right base expression.
+                flat_node_type right_type;
+                // Index in corresponding array.
+                // if type == TERM, then this is index in array 'terms'.
+                std::size_t right_index;
+            };
 
             // Storing the crypto3::math::expression class in a flat way, 
             // to be able to use it in marshalling. We put different types of nodes
@@ -82,15 +82,15 @@ namespace nil {
                 math::expression<VariableType> to_expression(
                         flat_node_type type, int node_index) {
                     switch (type) {
-                        case TERM:
+                        case flat_node_type::TERM:
                             return terms[node_index];
-                        case POWER: {
+                        case flat_node_type::POWER: {
                             const auto& pow_op = pow_operations[node_index];
                             return math::pow_operation<VariableType>(
                                 to_expression(pow_op.type, pow_op.child_index),
                                 pow_op.power);
                         }
-                        case BINARY_ARITHMETIC: {
+                        case flat_node_type::BINARY_ARITHMETIC: {
                             const auto& bin_op = binary_operations[node_index];
                             return math::binary_arithmetic_operation<VariableType>(
                                 to_expression(bin_op.left_type, bin_op.left_index), 
@@ -126,7 +126,7 @@ namespace nil {
                 void operator()(const math::term<VariableType>& term) {
                     result.terms.push_back(term);
 
-                    result.root_type = TERM;
+                    result.root_type = flat_node_type::TERM;
                     result.root_index = result.terms.size() - 1;
                 }
 
@@ -135,7 +135,7 @@ namespace nil {
                     boost::apply_visitor(*this, pow.expr.expr);
                     result.pow_operations.push_back({pow.power, result.root_type, result.root_index});
 
-                    result.root_type = POWER;
+                    result.root_type = flat_node_type::POWER;
                     result.root_index = result.pow_operations.size() - 1;
                 }
 
@@ -154,7 +154,7 @@ namespace nil {
 
                     result.pow_operations.push_back(flat_op);
 
-                    result.root_type = BINARY_ARITHMETIC;
+                    result.root_type = flat_node_type::BINARY_ARITHMETIC;
                     result.root_index = result.binary_operations.size() - 1;
                 }
 

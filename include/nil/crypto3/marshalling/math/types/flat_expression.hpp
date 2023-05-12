@@ -48,7 +48,7 @@ namespace nil {
                 flat_node_type type;
                 // Index in corresponding array.
                 // if type == TERM, then this is index in array 'terms'.
-                std::size_t child_index;
+                std::uint32_t child_index;
             };
 
             struct flat_binary_arithmetic_operation {
@@ -58,13 +58,13 @@ namespace nil {
                 flat_node_type left_type;
                 // Index in corresponding array.
                 // if type == TERM, then this is index in array 'terms'.
-                std::size_t left_index;
+                std::uint32_t left_index;
 
                 // Type of the right base expression.
                 flat_node_type right_type;
                 // Index in corresponding array.
                 // if type == TERM, then this is index in array 'terms'.
-                std::size_t right_index;
+                std::uint32_t right_index;
             };
 
             // Storing the crypto3::math::expression class in a flat way, 
@@ -109,7 +109,7 @@ namespace nil {
                     
                 // Index in corresponding array.
                 // if type == TERM, then this is index in array 'terms'.
-                size_t root_index;
+                std::uint32_t root_index;
 
             };
     

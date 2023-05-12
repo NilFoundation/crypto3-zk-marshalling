@@ -60,7 +60,7 @@ namespace nil {
                                 // type
                                 nil::marshalling::types::integral<TTypeBase, std::uint8_t>,
                                 // child_index
-                                nil::marshalling::types::integral<TTypeBase, std::size_t>
+                                nil::marshalling::types::integral<TTypeBase, std::uint32_t>
                             >
                         >;
                 };
@@ -77,11 +77,11 @@ namespace nil {
                                 // left_type
                                 nil::marshalling::types::integral<TTypeBase, std::uint8_t>,
                                 // left_index
-                                nil::marshalling::types::integral<TTypeBase, std::size_t>,
+                                nil::marshalling::types::integral<TTypeBase, std::uint32_t>,
                                 // right_type
                                 nil::marshalling::types::integral<TTypeBase, std::uint8_t>,
                                 // right_index
-                                nil::marshalling::types::integral<TTypeBase, std::size_t>
+                                nil::marshalling::types::integral<TTypeBase, std::uint32_t>
                             >
                         >;
                 };
@@ -120,7 +120,7 @@ namespace nil {
                                 // flat_node_type root_type;
                                 nil::marshalling::types::integral<TTypeBase, std::uint8_t>,
                                 // size_t root_index;
-                                nil::marshalling::types::integral<TTypeBase, std::size_t>
+                                nil::marshalling::types::integral<TTypeBase, std::uint32_t>
                             >
                         >;
                 };
@@ -133,7 +133,7 @@ namespace nil {
                         std::make_tuple(
                             nil::marshalling::types::integral<TTypeBase, std::int64_t>(power_op.power),
                             nil::marshalling::types::integral<TTypeBase, std::uint8_t>((std::uint8_t)power_op.type),
-                            nil::marshalling::types::integral<TTypeBase, std::size_t>(power_op.child_index)));
+                            nil::marshalling::types::integral<TTypeBase, std::uint32_t>(power_op.child_index)));
                 }
 
                 template<typename Endianness>
@@ -144,9 +144,9 @@ namespace nil {
                         std::make_tuple(
                             nil::marshalling::types::integral<TTypeBase, std::uint8_t>((std::uint8_t)bin_op.op),
                             nil::marshalling::types::integral<TTypeBase, std::uint8_t>((std::uint8_t)bin_op.left_type),
-                            nil::marshalling::types::integral<TTypeBase, std::size_t>(bin_op.left_index), 
+                            nil::marshalling::types::integral<TTypeBase, std::uint32_t>(bin_op.left_index), 
                             nil::marshalling::types::integral<TTypeBase, std::uint8_t>((std::uint8_t)bin_op.right_type),
-                            nil::marshalling::types::integral<TTypeBase, std::size_t>(bin_op.right_index)));
+                            nil::marshalling::types::integral<TTypeBase, std::uint32_t>(bin_op.right_index)));
                 }
 
 
@@ -175,7 +175,7 @@ namespace nil {
                     using pow_operation_type = typename flat_pow_operation<TTypeBase>::type;
                     using pow_vector_marshalling_type = nil::marshalling::types::array_list<
                         TTypeBase, pow_operation_type, nil::marshalling::option::sequence_size_field_prefix<
-                                        nil::marshalling::types::integral<TTypeBase, std::size_t>>>;
+                                        size_t_marshalling_type>>;
                     pow_vector_marshalling_type filled_powers;
                     for (const auto &power : flat_expr.pow_operations) {
                         filled_powers.value().push_back(fill_power_operation<Endianness>(power));
@@ -183,7 +183,9 @@ namespace nil {
 
                     // Fill the binary operations. 
                     using binary_operation_type = typename flat_binary_arithmetic_operation<TTypeBase>::type;
-                    using binary_operation_vector_marshalling_type = nil::marshalling::types::array_list<TTypeBase, binary_operation_type, nil::marshalling::option::sequence_size_field_prefix<nil::marshalling::types::integral<TTypeBase, std::size_t>>>;
+                    using binary_operation_vector_marshalling_type = nil::marshalling::types::array_list<
+                        TTypeBase, binary_operation_type,
+                        nil::marshalling::option::sequence_size_field_prefix<size_t_marshalling_type>>;
                     binary_operation_vector_marshalling_type filled_binary_opeations;
                     for (const auto &bin_op : flat_expr.binary_operations) {
                         filled_binary_opeations.value().push_back(
@@ -196,7 +198,7 @@ namespace nil {
                             filled_powers,
                             filled_binary_opeations,
                             nil::marshalling::types::integral<TTypeBase, std::uint8_t>((std::uint8_t)flat_expr.root_type),
-                            nil::marshalling::types::integral<TTypeBase, std::size_t>(flat_expr.root_index)));
+                            nil::marshalling::types::integral<TTypeBase, std::uint32_t>(flat_expr.root_index)));
  
                 }
 

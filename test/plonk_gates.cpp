@@ -95,7 +95,7 @@ bool are_plonk_gates_equal(
     if (lhs.constraints.size() != rhs.constraints.size())
         return false;
     for (auto i = 0; i < lhs.constraints.size(); i++) {
-        if (lhs.constraints[i] == rhs.constraints[i])
+        if (lhs.constraints[i] != rhs.constraints[i])
             return false;
     }
     return true;
@@ -314,7 +314,7 @@ void test_expression(std::size_t vars_n, std::size_t terms_n) {
 
     auto filled_val = types::fill_expression<value_type, Endianness>(val);
     auto _val = types::make_expression<value_type, Endianness>(filled_val);
-    BOOST_CHECK(val == _val);
+    BOOST_CHECK_EQUAL(val, _val);
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_val.length(), 0x00);
@@ -326,7 +326,7 @@ void test_expression(std::size_t vars_n, std::size_t terms_n) {
     auto read_iter = cv.begin();
     status = test_val_read.read(read_iter, cv.size());
     auto constructed_val_read = types::make_expression<value_type, Endianness>(test_val_read);
-    BOOST_CHECK(val == constructed_val_read);
+    BOOST_CHECK_EQUAL(val, constructed_val_read);
 }
 
 template<typename Field, typename Endianness>

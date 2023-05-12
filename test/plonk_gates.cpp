@@ -286,7 +286,7 @@ void test_plonk_term(std::size_t vars_n) {
 
     auto filled_val = types::fill_term<value_type, Endianness>(val);
     auto _val = types::make_term<value_type, Endianness>(filled_val);
-    BOOST_CHECK(val == _val);
+    BOOST_CHECK_EQUAL(val, _val);
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_val.length(), 0x00);
@@ -298,7 +298,7 @@ void test_plonk_term(std::size_t vars_n) {
     auto read_iter = cv.begin();
     status = test_val_read.read(read_iter, cv.size());
     auto constructed_val_read = types::make_term<value_type, Endianness>(test_val_read);
-    BOOST_CHECK(val == constructed_val_read);
+    BOOST_CHECK_EQUAL(val, constructed_val_read);
 }
 
 template<typename Field, typename Endianness>

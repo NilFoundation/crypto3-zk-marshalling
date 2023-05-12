@@ -24,8 +24,8 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------//
 
-#ifndef CRYPTO3_MARSHALLING_ZK_MATH_NON_LINEAR_COMBINATION_HPP
-#define CRYPTO3_MARSHALLING_ZK_MATH_NON_LINEAR_COMBINATION_HPP
+#ifndef CRYPTO3_MARSHALLING_ZK_MATH_EXPRESSION_HPP
+#define CRYPTO3_MARSHALLING_ZK_MATH_EXPRESSION_HPP
 
 #include <type_traits>
 
@@ -242,4 +242,4 @@ namespace nil {
     }            // namespace crypto3
 }    // namespace nil
 
-#endif    // CRYPTO3_MARSHALLING_ZK_MATH_NON_LINEAR_COMBINATION_HPP
+#endif    // CRYPTO3_MARSHALLING_ZK_MATH_EXPRESSION_HPP

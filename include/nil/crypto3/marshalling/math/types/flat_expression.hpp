@@ -109,7 +109,7 @@ namespace nil {
                     
                 // Index in corresponding array.
                 // if type == TERM, then this is index in array 'terms'.
-                int root_index;
+                size_t root_index;
 
             };
     
@@ -117,7 +117,9 @@ namespace nil {
             template<typename VariableType>
             class expression_flattener : public boost::static_visitor<void> {
             public:
-                expression_flattener(const math::expression<VariableType>& expr);
+                expression_flattener(const math::expression<VariableType>& expr) {
+                    boost::apply_visitor(*this, expr.expr);
+                }
 
                 const flat_expression<VariableType>& get_result() const {
                     return result;
@@ -152,7 +154,7 @@ namespace nil {
                     flat_op.right_type = result.root_type;
                     flat_op.right_index = result.root_index; 
 
-                    result.pow_operations.push_back(flat_op);
+                    result.binary_operations.push_back(flat_op);
 
                     result.root_type = flat_node_type::BINARY_ARITHMETIC;
                     result.root_index = result.binary_operations.size() - 1;

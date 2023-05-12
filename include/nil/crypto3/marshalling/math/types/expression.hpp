@@ -1,7 +1,5 @@
 //---------------------------------------------------------------------------//
-// Copyright (c) 2021 Mikhail Komarov <nemo@nil.foundation>
-// Copyright (c) 2021 Nikita Kaskov <nbering@nil.foundation>
-// Copyright (c) 2021 Ilias Khairullin <ilias@nil.foundation>
+// Copyright (c) 2023 Martun Karapetyan <martun@nil.foundation>
 //
 // MIT License
 //

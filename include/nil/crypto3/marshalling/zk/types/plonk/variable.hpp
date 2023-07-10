@@ -48,7 +48,7 @@ namespace nil {
                 
                 /********************************* plonk_variable ***************************/
                 template<typename TTypeBase, typename Field>
-                struct variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<Field>> {
+                struct variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<typename Field::value_type>> {
                     using type = nil::marshalling::types::bundle<
                         TTypeBase,
                         std::tuple<
@@ -97,7 +97,7 @@ namespace nil {
                 template<typename TTypeBase, typename Field>
                 using variables = nil::marshalling::types::array_list<
                     TTypeBase, 
-                    typename variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<Field>>::type,
+                    typename variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<typename Field::value_type>>::type,
                     nil::marshalling::option::sequence_size_field_prefix<nil::marshalling::types::integral<TTypeBase, std::size_t>>
                 >;
 

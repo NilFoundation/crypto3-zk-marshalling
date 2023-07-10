@@ -24,15 +24,15 @@ namespace nil {
                 /*********************** Plonk copy constraint ****************************/
                 template<typename TTypeBase, typename FieldType> 
                     using plonk_copy_constraint = nil::marshalling::types::bundle<TTypeBase, std::tuple<       
-                        typename variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<FieldType>>::type, 
-                        typename variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<FieldType>>::type
+                        typename variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<typename FieldType::value_type>>::type, 
+                        typename variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<typename FieldType::value_type>>::type
                     >>;
 
                 template<typename FieldType, typename Endianness> 
                 nil::crypto3::marshalling::types::plonk_copy_constraint<typename nil::marshalling::field_type<Endianness>, FieldType>
                 fill_plonk_copy_constraint(const nil::crypto3::zk::snark::plonk_copy_constraint<FieldType> &copy_constraint){
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
-                    using VariableType = nil::crypto3::zk::snark::plonk_variable<FieldType>;
+                    using VariableType = nil::crypto3::zk::snark::plonk_variable<typename FieldType::value_type>;
                     using result_type = nil::crypto3::marshalling::types::plonk_copy_constraint<TTypeBase, VariableType>;
 
                     return result_type(
@@ -50,7 +50,7 @@ namespace nil {
                     FieldType> &filled_copy_constraint){
 
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
-                    using VariableType = nil::crypto3::zk::snark::plonk_variable<FieldType>;
+                    using VariableType = nil::crypto3::zk::snark::plonk_variable<typename FieldType::value_type>;
                     using result_type = nil::crypto3::zk::snark::plonk_copy_constraint<typename VariableType::field_type>;
                     return std::make_pair(
                         make_variable<VariableType, Endianness>(std::get<0>(filled_copy_constraint.value())),

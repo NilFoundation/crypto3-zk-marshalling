@@ -102,7 +102,7 @@ namespace nil {
                 >;
 
                 template<typename Variable, typename Endianness>
-                variables<nil::marshalling::field_type<Endianness>, typename Variable::field_type>
+                variables<nil::marshalling::field_type<Endianness>, typename Variable::assignment_type>
                 fill_variables(const std::vector<Variable> &vars) {
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
                     using AssignmentType = typename Variable::assignment_type;
@@ -117,7 +117,7 @@ namespace nil {
 
                 template<typename Variable, typename Endianness>
                 std::vector<Variable>
-                make_variables(const variables<nil::marshalling::field_type<Endianness>, typename Variable::field_type> &filled_vars){
+                make_variables(const variables<nil::marshalling::field_type<Endianness>, typename Variable::assignment_type> &filled_vars){
                     std::vector<Variable> vars;
                     for (std::size_t i = 0; i < filled_vars.value().size(); i++) {
                         vars.emplace_back(make_variable<Variable, Endianness>(filled_vars.value().at(i)));

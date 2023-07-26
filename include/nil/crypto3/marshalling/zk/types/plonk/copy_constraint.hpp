@@ -23,7 +23,7 @@ namespace nil {
 
                 /*********************** Plonk copy constraint ****************************/
                 template<typename TTypeBase, typename FieldType> 
-                    using plonk_copy_constraint = nil::marshalling::types::bundle<TTypeBase, std::tuple<       
+                    using plonk_copy_constraint = nil::marshalling::types::bundle<TTypeBase, std::tuple<
                         typename variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<typename FieldType::value_type>>::type, 
                         typename variable<TTypeBase, nil::crypto3::zk::snark::plonk_variable<typename FieldType::value_type>>::type
                     >>;
@@ -33,7 +33,7 @@ namespace nil {
                 fill_plonk_copy_constraint(const nil::crypto3::zk::snark::plonk_copy_constraint<FieldType> &copy_constraint){
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
                     using VariableType = nil::crypto3::zk::snark::plonk_variable<typename FieldType::value_type>;
-                    using result_type = nil::crypto3::marshalling::types::plonk_copy_constraint<TTypeBase, VariableType>;
+                    using result_type = nil::crypto3::marshalling::types::plonk_copy_constraint<TTypeBase, FieldType>;
 
                     return result_type(
                         std::make_tuple(
@@ -51,7 +51,7 @@ namespace nil {
 
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
                     using VariableType = nil::crypto3::zk::snark::plonk_variable<typename FieldType::value_type>;
-                    using result_type = nil::crypto3::zk::snark::plonk_copy_constraint<typename VariableType::field_type>;
+                    using result_type = nil::crypto3::zk::snark::plonk_copy_constraint<FieldType>;
                     return std::make_pair(
                         make_variable<VariableType, Endianness>(std::get<0>(filled_copy_constraint.value())),
                         make_variable<VariableType, Endianness>(std::get<1>(filled_copy_constraint.value()))
@@ -63,7 +63,7 @@ namespace nil {
                 template<typename TTypeBase, typename FieldType>
                 using plonk_copy_constraints = nil::marshalling::types::array_list<
                     TTypeBase, 
-                    plonk_copy_constraint<TTypeBase, nil::crypto3::zk::snark::plonk_copy_constraint<FieldType>>,
+                    plonk_copy_constraint<TTypeBase, FieldType>,
                     nil::marshalling::option::sequence_size_field_prefix<nil::marshalling::types::integral<TTypeBase, std::size_t>>
                 >;
 

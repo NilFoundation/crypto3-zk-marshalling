@@ -66,7 +66,7 @@ namespace nil {
                             nil::marshalling::option::sequence_size_field_prefix<nil::marshalling::types::integral<TTypeBase, std::size_t>>
                         >,
                         //  std::vector<VariableType> lookup_value;
-                        nil::crypto3::marshalling::types::variables<TTypeBase, typename PlonkLookupConstraint::field_type>
+                        nil::crypto3::marshalling::types::variables<TTypeBase, typename PlonkLookupConstraint::field_type::value_type>
                     >
                 >;
 

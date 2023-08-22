@@ -29,18 +29,11 @@
 
 #include <type_traits>
 
-#include <nil/crypto3/zk/snark/arithmetization/plonk/constraint_system.hpp>
-
 #include <nil/marshalling/types/bundle.hpp>
 #include <nil/marshalling/types/array_list.hpp>
 #include <nil/marshalling/types/integral.hpp>
 #include <nil/marshalling/status_type.hpp>
 #include <nil/marshalling/options.hpp>
-
-#include <nil/crypto3/zk/snark/arithmetization/plonk/variable.hpp>
-#include <nil/crypto3/marshalling/zk/types/plonk/gate.hpp>
-#include <nil/crypto3/marshalling/zk/types/plonk/constraint.hpp>
-#include <nil/crypto3/marshalling/zk/types/plonk/copy_constraint.hpp>
 
 namespace nil {
     namespace crypto3 {

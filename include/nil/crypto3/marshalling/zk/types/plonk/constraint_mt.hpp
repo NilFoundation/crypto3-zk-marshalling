@@ -127,7 +127,7 @@ namespace nil {
                 struct plonk_gate_constraint_base_type;
 
                 template <typename TTypeBase, typename Constraint> 
-                struct plonk_gate_constraint_base_type< TTypeBase, Constraint, nil::crypto3::zk::snark::plonk_constraint<
+                struct plonk_gate_constraint_base_type< TTypeBase, Constraint, nil::actor::zk::snark::plonk_constraint<
                     typename Constraint::field_type,
                     typename Constraint::variable_type
                 >>
@@ -136,7 +136,7 @@ namespace nil {
                 };
 
                 template <typename TTypeBase, typename Constraint> 
-                struct plonk_gate_constraint_base_type< TTypeBase, Constraint, nil::crypto3::zk::snark::plonk_lookup_constraint<
+                struct plonk_gate_constraint_base_type< TTypeBase, Constraint, nil::actor::zk::snark::plonk_lookup_constraint<
                     typename Constraint::field_type,
                     typename Constraint::variable_type
                 >>

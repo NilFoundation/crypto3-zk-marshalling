@@ -19,6 +19,7 @@ cm_test_link_libraries(${CMAKE_WORKSPACE_NAME}_${CURRENT_PROJECT_NAME}
                        crypto3::multiprecision
                        crypto3::algebra
                        crypto3::zk
+                       actor::zk
                        crypto3::blueprint
                        crypto3::pubkey
                        crypto3::pkpad
@@ -68,7 +69,9 @@ set(TESTS_NAMES
     "placeholder_proof"
     "placeholder_common_data"
     "plonk_gates"
+    "plonk_gates_mt"
     "plonk_constraint_system"
+    "plonk_constraint_system_mt"
     "eddsa")
 
 foreach(TEST_NAME ${TESTS_NAMES})

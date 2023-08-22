@@ -17,35 +17,38 @@
 
 #include <nil/crypto3/random/algebraic_random_device.hpp>
 
-#include <nil/crypto3/zk/snark/arithmetization/plonk/variable.hpp>
-#include <nil/crypto3/zk/math/expression.hpp>
+#include <nil/actor/zk/snark/arithmetization/plonk/variable.hpp>
+#include <nil/actor/zk/math/expression.hpp>
 
-#include <nil/crypto3/zk/snark/arithmetization/plonk/copy_constraint.hpp>
-#include <nil/crypto3/zk/snark/arithmetization/plonk/lookup_constraint.hpp>
-#include <nil/crypto3/zk/snark/arithmetization/plonk/constraint.hpp>
-#include <nil/crypto3/zk/snark/arithmetization/plonk/gate.hpp>
-#include <nil/crypto3/zk/snark/arithmetization/plonk/copy_constraint.hpp>
+#include <nil/actor/zk/snark/arithmetization/plonk/copy_constraint.hpp>
+#include <nil/actor/zk/snark/arithmetization/plonk/lookup_constraint.hpp>
+#include <nil/actor/zk/snark/arithmetization/plonk/constraint.hpp>
+#include <nil/actor/zk/snark/arithmetization/plonk/gate.hpp>
 
 #include <nil/crypto3/marshalling/zk/types/plonk/variable.hpp>
 #include <nil/crypto3/marshalling/math/types/term.hpp>
-#include <nil/crypto3/marshalling/math/types/expression.hpp>
-#include <nil/crypto3/marshalling/zk/types/plonk/constraint.hpp>
-#include <nil/crypto3/marshalling/zk/types/plonk/copy_constraint.hpp>
+#include <nil/crypto3/marshalling/math/types/flat_expression_mt.hpp>
+#include <nil/crypto3/marshalling/math/types/expression_mt.hpp>
+#include <nil/crypto3/marshalling/zk/types/plonk/constraint_mt.hpp>
+#include <nil/crypto3/marshalling/zk/types/plonk/copy_constraint_mt.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/gate.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/constraint_system.hpp>
 
-#include <nil/crypto3/zk/snark/systems/plonk/placeholder/detail/placeholder_policy.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
-#include <nil/crypto3/zk/snark/arithmetization/plonk/variable.hpp>
-#include "detail/circuits.hpp"
+#include <nil/actor/zk/snark/systems/plonk/placeholder/detail/placeholder_policy.hpp>
+#include <nil/actor/zk/snark/systems/plonk/placeholder/params.hpp>
+#include <nil/actor/zk/snark/arithmetization/plonk/variable.hpp>
+#include <nil/actor/zk/snark/arithmetization/plonk/constraint.hpp>
+#include <nil/actor/zk/snark/arithmetization/plonk/copy_constraint.hpp>
+#include <nil/actor/zk/snark/arithmetization/plonk/gate.hpp>
+#include "detail/circuits_mt.hpp"
 
 using namespace nil::crypto3;
 using namespace nil::crypto3::marshalling;
 
 template<typename Field>
 bool are_lookup_constraints_equal(
-    const nil::crypto3::zk::snark::plonk_lookup_constraint<Field> &lhs,
-    const nil::crypto3::zk::snark::plonk_lookup_constraint<Field> &rhs
+    const nil::actor::zk::snark::plonk_lookup_constraint<Field> &lhs,
+    const nil::actor::zk::snark::plonk_lookup_constraint<Field> &rhs
 ){
     if(lhs.lookup_input.size() != rhs.lookup_input.size() ) return false;
     for( size_t i = 0; i < lhs.lookup_input.size(); i++ ){
@@ -61,8 +64,8 @@ bool are_lookup_constraints_equal(
 
 template<typename Field>
 bool are_plonk_gates_equal(
-    const nil::crypto3::zk::snark::plonk_gate<Field, nil::crypto3::zk::snark::plonk_constraint<Field, nil::crypto3::zk::snark::plonk_variable<Field>>> &lhs,
-    const nil::crypto3::zk::snark::plonk_gate<Field, nil::crypto3::zk::snark::plonk_constraint<Field, nil::crypto3::zk::snark::plonk_variable<Field>>> &rhs
+    const nil::actor::zk::snark::plonk_gate<Field, nil::actor::zk::snark::plonk_constraint<Field, nil::actor::zk::snark::plonk_variable<Field>>> &lhs,
+    const nil::actor::zk::snark::plonk_gate<Field, nil::actor::zk::snark::plonk_constraint<Field, nil::actor::zk::snark::plonk_variable<Field>>> &rhs
 ) {
     if (lhs.selector_index != rhs.selector_index)
         return false;
@@ -77,8 +80,8 @@ bool are_plonk_gates_equal(
 
 template<typename Field>
 bool are_plonk_lookup_gates_equal(
-    const nil::crypto3::zk::snark::plonk_gate<Field, nil::crypto3::zk::snark::plonk_lookup_constraint<Field, nil::crypto3::zk::snark::plonk_variable<Field>>> &lhs,
-    const nil::crypto3::zk::snark::plonk_gate<Field, nil::crypto3::zk::snark::plonk_lookup_constraint<Field, nil::crypto3::zk::snark::plonk_variable<Field>>> &rhs
+    const nil::actor::zk::snark::plonk_gate<Field, nil::actor::zk::snark::plonk_lookup_constraint<Field, nil::actor::zk::snark::plonk_variable<Field>>> &lhs,
+    const nil::actor::zk::snark::plonk_gate<Field, nil::actor::zk::snark::plonk_lookup_constraint<Field, nil::actor::zk::snark::plonk_variable<Field>>> &rhs
 ) {
     if (lhs.selector_index != rhs.selector_index)
         return false;
@@ -153,7 +156,7 @@ struct placeholder_test_params {
     constexpr static const std::size_t selector_columns = 2;
 
     using arithmetization_params =
-        nil::crypto3::zk::snark::plonk_arithmetization_params<
+        nil::actor::zk::snark::plonk_arithmetization_params<
             witness_columns, 
             public_input_columns, 
             constant_columns, 
@@ -175,7 +178,7 @@ struct placeholder_test_params_lookups {
     constexpr static const std::size_t selector_columns = 1;
 
     using arithmetization_params =
-        nil::crypto3::zk::snark::plonk_arithmetization_params<
+        nil::actor::zk::snark::plonk_arithmetization_params<
             witness_columns, 
             public_input_columns, 
             constant_columns, 
@@ -195,24 +198,24 @@ BOOST_AUTO_TEST_CASE(circuit_3_test) {
 
     using curve_type = nil::crypto3::algebra::curves::pallas;
     using FieldType = typename curve_type::base_field_type;   
-    using VariableType = nil::crypto3::zk::snark::plonk_variable<FieldType>;
+    using VariableType = nil::actor::zk::snark::plonk_variable<FieldType>;
 
-    using circuit_2_params = nil::crypto3::zk::snark::placeholder_params<
+    using circuit_2_params = nil::actor::zk::snark::placeholder_params<
         FieldType, 
         typename placeholder_test_params::arithmetization_params
     >;
-    using circuit_3_params = nil::crypto3::zk::snark::placeholder_params<
+    using circuit_3_params = nil::actor::zk::snark::placeholder_params<
         FieldType, 
         typename placeholder_test_params_lookups::arithmetization_params
     >;
 
        
-    using policy_type = zk::snark::detail::placeholder_policy<FieldType, circuit_3_params>;
+    using policy_type = nil::actor::zk::snark::detail::placeholder_policy<FieldType, circuit_3_params>;
 
-    nil::crypto3::zk::snark::circuit_description<FieldType, circuit_3_params, table_rows_log, 3> circuit =
-        nil::crypto3::zk::snark::circuit_test_3<FieldType>();
+    nil::actor::zk::snark::circuit_description<FieldType, circuit_3_params, table_rows_log, 3> circuit =
+        nil::actor::zk::snark::circuit_test_3<FieldType>();
 
-//    using constraint_system_type = typename nil::crypto3::zk::snark::plonk_constraint_system<
+//    using constraint_system_type = typename nil::actor::zk::snark::plonk_constraint_system<
 //        FieldType,
 //        placeholder_test_params_lookups::arithmetization_params
 //    >;
@@ -230,19 +233,19 @@ BOOST_AUTO_TEST_CASE(circuit_2_test) {
 
     using curve_type = nil::crypto3::algebra::curves::pallas;
     using FieldType = typename curve_type::base_field_type;   
-    using VariableType = nil::crypto3::zk::snark::plonk_variable<FieldType>;
+    using VariableType = nil::actor::zk::snark::plonk_variable<FieldType>;
 
-    using circuit_2_params = nil::crypto3::zk::snark::placeholder_params<
+    using circuit_2_params = nil::actor::zk::snark::placeholder_params<
         FieldType, 
         typename placeholder_test_params::arithmetization_params
     >;
        
-    using policy_type = zk::snark::detail::placeholder_policy<FieldType, circuit_2_params>;
+    using policy_type = nil::actor::zk::snark::detail::placeholder_policy<FieldType, circuit_2_params>;
 
-    nil::crypto3::zk::snark::circuit_description<FieldType, circuit_2_params, table_rows_log, 4> circuit =
-        nil::crypto3::zk::snark::circuit_test_2<FieldType>();
+    nil::actor::zk::snark::circuit_description<FieldType, circuit_2_params, table_rows_log, 4> circuit =
+        nil::actor::zk::snark::circuit_test_2<FieldType>();
 
-//    using constraint_system_type = typename nil::crypto3::zk::snark::plonk_constraint_system<
+//    using constraint_system_type = typename nil::actor::zk::snark::plonk_constraint_system<
 //        FieldType,
 //        placeholder_test_params_lookups::arithmetization_params
 //    >;

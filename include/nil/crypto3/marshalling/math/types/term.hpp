@@ -37,9 +37,6 @@
 
 #include <nil/crypto3/marshalling/algebra/types/field_element.hpp>
 
-#include <nil/crypto3/zk/math/expression.hpp>
-#include <nil/crypto3/marshalling/zk/types/plonk/variable.hpp>
-
 namespace nil {
     namespace crypto3 {
         namespace marshalling {
@@ -47,17 +44,17 @@ namespace nil {
                 template<typename TTypeBase, typename NonLinearTerm, typename = void>
                 struct term;
 
-                template<typename TTypeBase, typename VariableType>
-                struct term<TTypeBase, nil::crypto3::math::term<VariableType>, void> {
+                template<typename TTypeBase, typename NonLinearTerm>
+                struct term<TTypeBase, NonLinearTerm, void> {
                     using type = nil::marshalling::types::bundle<
                         TTypeBase,
                         std::tuple<
                             // assignment_type coeff
                             field_element<TTypeBase,
-                                          typename nil::crypto3::math::term<VariableType>::assignment_type>,
+                                typename NonLinearTerm::variable_type::assignment_type>,
                             // std::vector<VariableType> vars
                             nil::marshalling::types::array_list<
-                                TTypeBase, typename variable<TTypeBase, VariableType>::type,
+                                TTypeBase, typename variable<TTypeBase, typename NonLinearTerm::variable_type>::type,
                                 nil::marshalling::option::sequence_size_field_prefix<
                                     nil::marshalling::types::integral<TTypeBase, std::size_t>>
                                 >
@@ -66,10 +63,7 @@ namespace nil {
                 };
 
                 template<typename NonLinearTerm, typename Endianness>
-                typename std::enable_if<
-                    std::is_same<nil::crypto3::math::term<typename NonLinearTerm::variable_type>,
-                                 NonLinearTerm>::value,
-                    typename term<nil::marshalling::field_type<Endianness>, NonLinearTerm>::type>::type
+                    typename term<nil::marshalling::field_type<Endianness>, NonLinearTerm>::type
                     fill_term(const NonLinearTerm &t) {
 
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
@@ -93,10 +87,7 @@ namespace nil {
                 }
 
                 template<typename NonLinearTerm, typename Endianness>
-                typename std::enable_if<
-                    std::is_same<nil::crypto3::math::term<typename NonLinearTerm::variable_type>,
-                                 NonLinearTerm>::value,
-                    NonLinearTerm>::type
+                    NonLinearTerm
                     make_term(const typename term<nil::marshalling::field_type<Endianness>,
                                                                         NonLinearTerm>::type &filled_term) {
                     NonLinearTerm t;

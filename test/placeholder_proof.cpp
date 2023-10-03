@@ -469,27 +469,29 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer){
         test_placeholder_proof<Endianness, placeholder_proof<field_type, lpc_placeholder_params_type>>(lpc_proof);
     }
 
-    std::size_t max_non_zero = 0;
-    for(std::size_t i = 0; i < assignments.public_input(0).size(); i++){
-        if( assignments.public_input(0)[i] != 0 ){
-            max_non_zero = i;
-        }
-    }
-
-    std::ofstream pi_stream;
-    pi_stream.open("circuit2/input.json");
-    pi_stream << "[" << std::endl;
-    for(std::size_t i = 0; i <= max_non_zero; i++ ){
-        if( i != 0 ) pi_stream << "," << std::endl;
-        pi_stream <<  "\t{\"field\": "<< assignments.public_input(0)[i] << " }";
-    }
-    pi_stream << std::endl << "]";
-    pi_stream.close();
-
     verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
         lpc_preprocessed_public_data, lpc_proof, constraint_system, lpc_scheme 
     );
     BOOST_CHECK(verifier_res);
+
+    if( has_argv("--print") ){
+        std::size_t max_non_zero = 0;
+        for(std::size_t i = 0; i < assignments.public_input(0).size(); i++){
+            if( assignments.public_input(0)[i] != 0 ){
+                max_non_zero = i;
+            }
+        }
+
+        std::ofstream pi_stream;
+        pi_stream.open("circuit2/input.json");
+        pi_stream << "[" << std::endl;
+        for(std::size_t i = 0; i <= max_non_zero; i++ ){
+            if( i != 0 ) pi_stream << "," << std::endl;
+            pi_stream <<  "\t{\"field\": "<< assignments.public_input(0)[i] << " }";
+        }
+        pi_stream << std::endl << "]";
+        pi_stream.close();
+    }
 }
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -574,11 +576,23 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     }else {
         test_placeholder_proof<Endianness, placeholder_proof<field_type, lpc_placeholder_params_type>>(proof);
     }
-    
+
+    std::vector <typename field_type::value_type> public_input = {1, 0};
     bool verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
-        preprocessed_public_data, proof, constraint_system, lpc_scheme);
+        preprocessed_public_data, proof, constraint_system, lpc_scheme, public_input );
     BOOST_CHECK(verifier_res);
     
+    if( has_argv("--print") ){
+        std::ofstream pi_stream;
+        pi_stream.open("circuit3/input.json");
+        pi_stream << "[" << std::endl;
+        for(std::size_t i = 0; i < public_input.size(); i++ ){
+            if( i != 0 ) pi_stream << "," << std::endl;
+            pi_stream <<  "\t{\"field\": "<< public_input[i] << " }";
+        }
+        pi_stream << std::endl << "]";
+        pi_stream.close();
+    }
 }
 BOOST_AUTO_TEST_SUITE_END()
 

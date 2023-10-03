@@ -341,7 +341,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     desc.rows_amount = placeholder_test_params::table_rows;
     desc.usable_rows_amount = placeholder_test_params::usable_rows;
 
-    typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
+    typename policy_type::constraint_system_type constraint_system(
+        circuit.gates, circuit.copy_constraints, circuit.lookup_gates, circuit.lookup_tables, circuit.public_input_gate
+    );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -436,7 +438,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer){
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
-    typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
+    typename policy_type::constraint_system_type constraint_system(
+        circuit.gates, circuit.copy_constraints, circuit.lookup_gates, circuit.lookup_tables, circuit.public_input_gate
+    );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -549,7 +553,8 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
@@ -577,7 +582,7 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
         test_placeholder_proof<Endianness, placeholder_proof<field_type, lpc_placeholder_params_type>>(proof);
     }
 
-    std::vector <typename field_type::value_type> public_input = {1, 0};
+    std::vector <typename field_type::value_type> public_input = {1, assignments.witness(1)[2]};
     bool verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
         preprocessed_public_data, proof, constraint_system, lpc_scheme, public_input );
     BOOST_CHECK(verifier_res);
@@ -651,7 +656,8 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
@@ -741,7 +747,8 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
@@ -830,7 +837,8 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 

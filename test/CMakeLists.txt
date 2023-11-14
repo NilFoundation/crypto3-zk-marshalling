@@ -55,21 +55,22 @@ macro(define_marshalling_test test)
 endmacro()
 
 set(TESTS_NAMES
-        "merkle_proof"
-        "accumulation_vector"
-        "sparse_vector"
-        "r1cs_gg_ppzksnark_primary_input"
-        "r1cs_gg_ppzksnark_proof"
-        "r1cs_gg_ppzksnark_verification_key"
-        "r1cs_gg_ppzksnark"
-        "fri_commitment"
-        "lpc_commitment"
-        "placeholder_proof"
-        "placeholder_common_data"
-        "plonk_gates"
-        "plonk_constraint_system"
-        "plonk_assignment_table"
-        "eddsa")
+    "merkle_proof"
+    "accumulation_vector"
+    "sparse_vector"
+    "r1cs_gg_ppzksnark_primary_input"
+    "r1cs_gg_ppzksnark_proof"
+    "r1cs_gg_ppzksnark_verification_key"
+    "r1cs_gg_ppzksnark"
+    "fri_commitment"
+    "lpc_commitment"
+    "placeholder_proof"
+    "placeholder_common_data"
+    "plonk_gates"
+    "plonk_gates_mt"
+    "plonk_constraint_system"
+    "plonk_constraint_system_mt"
+    "eddsa")
 
 foreach(TEST_NAME ${TESTS_NAMES})
     define_marshalling_test(${TEST_NAME})

@@ -21,11 +21,20 @@
 
 #include <nil/crypto3/random/algebraic_random_device.hpp>
 
-#include <nil/crypto3/marshalling/zk/types/plonk/variable.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/variable.hpp>
+#include <nil/crypto3/zk/math/expression.hpp>
 
+#include <nil/crypto3/zk/snark/arithmetization/plonk/copy_constraint.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/lookup_constraint.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/constraint.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/gate.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/copy_constraint.hpp>
+
+#include <nil/crypto3/marshalling/zk/types/plonk/variable.hpp>
 #include <nil/crypto3/marshalling/math/types/term.hpp>
 #include <nil/crypto3/marshalling/math/types/expression.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/constraint.hpp>
+#include <nil/crypto3/marshalling/zk/types/plonk/copy_constraint.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/gate.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/constraint_system.hpp>
 
@@ -43,21 +52,76 @@ using namespace nil::crypto3::marshalling;
 using namespace nil::crypto3::zk;
 using namespace nil::crypto3::zk::snark;
 
+<<<<<<< HEAD
 bool has_argv(std::string name){
     bool result = false;
     for (std::size_t i = 0; i < boost::unit_test::framework::master_test_suite().argc; i++) {
         if (std::string(boost::unit_test::framework::master_test_suite().argv[i]) == "--print") {
             result = true;
         }
+=======
+template<typename Field>
+bool are_lookup_constraints_equal(
+    const nil::crypto3::zk::snark::plonk_lookup_constraint<Field> &lhs,
+    const nil::crypto3::zk::snark::plonk_lookup_constraint<Field> &rhs
+){
+    if(lhs.lookup_input.size() != rhs.lookup_input.size() ) return false;
+    for( size_t i = 0; i < lhs.lookup_input.size(); i++ ){
+        if(lhs.lookup_input[i] != rhs.lookup_input[i]) return false;
+    }
+
+    if(lhs.lookup_value.size() != rhs.lookup_value.size() ) return false;
+    for( size_t i = 0; i < lhs.lookup_value.size(); i++ ){
+        if(lhs.lookup_value[i] != rhs.lookup_value[i]) return false;
+    }
+    return true;
+}
+
+template<typename Field>
+bool are_plonk_gates_equal(
+        const nil::crypto3::zk::snark::plonk_gate<Field, nil::crypto3::zk::snark::plonk_constraint<Field, nil::crypto3::zk::snark::plonk_variable<typename Field::value_type>>> &lhs,
+        const nil::crypto3::zk::snark::plonk_gate<Field, nil::crypto3::zk::snark::plonk_constraint<Field, nil::crypto3::zk::snark::plonk_variable<typename Field::value_type>>> &rhs) {
+    if (lhs.selector_index != rhs.selector_index)
+        return false;
+    if (lhs.constraints.size() != rhs.constraints.size())
+        return false;
+    for (auto i = 0; i < lhs.constraints.size(); i++) {
+        if (lhs.constraints[i] != rhs.constraints[i])
+            return false;
+>>>>>>> 94fae3b803a01caf926d918c33aee4430432fedb
     }
     return result;
 }
 
+<<<<<<< HEAD
 template<typename TIter>
 void print_hex_byteblob(std::ostream &os, TIter iter_begin, TIter iter_end, bool endl) {
     os << std::hex;
     for (TIter it = iter_begin; it != iter_end; it++) {
         os << std::setfill('0') << std::setw(2) << std::right << int(*it);
+=======
+template<typename Field>
+bool are_plonk_lookup_gates_equal(
+    const nil::crypto3::zk::snark::plonk_gate<Field, nil::crypto3::zk::snark::plonk_lookup_constraint<Field, nil::crypto3::zk::snark::plonk_variable<typename Field::value_type>>> &lhs,
+    const nil::crypto3::zk::snark::plonk_gate<Field, nil::crypto3::zk::snark::plonk_lookup_constraint<Field, nil::crypto3::zk::snark::plonk_variable<typename Field::value_type>>> &rhs
+) {
+    if (lhs.selector_index != rhs.selector_index)
+        return false;
+    if (lhs.constraints.size() != rhs.constraints.size())
+        return false;
+    for (auto i = 0; i < lhs.constraints.size(); i++) {
+        if (!are_lookup_constraints_equal<Field>(lhs.constraints[i], rhs.constraints[i]))
+            return false;
+    }
+    return true;
+}
+
+template<typename ConstraintSystem>
+bool are_constraint_systems_equal(const ConstraintSystem &s1, const ConstraintSystem &s2) {
+    if (s1.gates().size() != s2.gates().size()) return false;
+    for (size_t i = 0; i < s1.gates().size(); i++) {
+        if (!are_plonk_gates_equal(s1.gates()[i], s2.gates()[i])) return false;
+>>>>>>> 94fae3b803a01caf926d918c33aee4430432fedb
     }
     os << std::dec;
     if (endl) {

@@ -30,18 +30,17 @@
 
 #include <type_traits>
 
-#include <nil/crypto3/zk/snark/arithmetization/plonk/constraint_system.hpp>
-
 #include <nil/marshalling/types/bundle.hpp>
 #include <nil/marshalling/types/array_list.hpp>
 #include <nil/marshalling/types/integral.hpp>
 #include <nil/marshalling/status_type.hpp>
 #include <nil/marshalling/options.hpp>
 
-#include <nil/crypto3/marshalling/zk/types/plonk/lookup_gate.hpp>
-#include <nil/crypto3/marshalling/zk/types/plonk/gate.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/constraint.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/copy_constraint.hpp>
+#include <nil/crypto3/marshalling/zk/types/plonk/lookup_constraint.hpp>
+#include <nil/crypto3/marshalling/zk/types/plonk/gate.hpp>
+#include <nil/crypto3/marshalling/zk/types/plonk/lookup_gate.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/lookup_table.hpp>
 
 namespace nil {
@@ -71,7 +70,7 @@ namespace nil {
                         fill_plonk_lookup_gates<Endianness, typename PlonkConstraintSystem::lookup_gates_container_type::value_type>(system.lookup_gates()),
                         fill_plonk_lookup_tables<Endianness, typename PlonkConstraintSystem::lookup_tables_type::value_type>(system.lookup_tables())
                     ));
-                }  
+                }
 
                 template<typename Endianness, typename PlonkConstraintSystem>
                 PlonkConstraintSystem

@@ -42,9 +42,18 @@
 
 #include <nil/crypto3/random/algebraic_random_device.hpp>
 
-#include <nil/crypto3/marshalling/math/types/term.hpp>
-#include <nil/crypto3/marshalling/math/types/expression.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/variable.hpp>
+#include <nil/crypto3/zk/math/expression.hpp>
+
+#include <nil/crypto3/zk/snark/arithmetization/plonk/copy_constraint.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/lookup_constraint.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/constraint.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/gate.hpp>
+
 #include <nil/crypto3/marshalling/zk/types/plonk/variable.hpp>
+#include <nil/crypto3/marshalling/math/types/term.hpp>
+#include <nil/crypto3/marshalling/math/types/flat_expression.hpp>
+#include <nil/crypto3/marshalling/math/types/expression.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/constraint.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/lookup_constraint.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/lookup_gate.hpp>
@@ -286,7 +295,7 @@ void test_expression(std::size_t vars_n, std::size_t terms_n) {
     using variable_type = nil::crypto3::zk::snark::plonk_variable<typename Field::value_type>;
     using value_type = nil::crypto3::math::expression<variable_type>;
     using value_marshalling_type =
-            typename types::expression<nil::marshalling::field_type<Endianness>, value_type>::type;
+    typename types::expression<nil::marshalling::field_type<Endianness>, value_type>::type;
 
     auto val = generate_random_plonk_expression<Field, variable_type>(vars_n, terms_n);
 
@@ -416,7 +425,11 @@ void test_plonk_lookup_constraint(std::size_t vars_n, std::size_t depth, std::si
 
     using variable_type = nil::crypto3::zk::snark::plonk_variable<typename Field::value_type>;
     using value_type = nil::crypto3::zk::snark::plonk_lookup_constraint<Field, variable_type>;
+<<<<<<< HEAD
     using value_marshalling_type = types::plonk_lookup_constraint<nil::marshalling::field_type<Endianness>, value_type>;
+=======
+    using value_marshalling_type = typename types::plonk_lookup_constraint<nil::marshalling::field_type<Endianness>, value_type>;
+>>>>>>> 94fae3b803a01caf926d918c33aee4430432fedb
 
     auto val = generate_random_plonk_lookup_constraint<Field>(vars_n, depth, expr_n);
 
@@ -564,6 +577,7 @@ void test_plonk_lookup_gates(std::size_t vars_n, std::size_t depth, std::size_t 
     auto constructed_val_read = types::make_plonk_lookup_gates<Endianness, value_type>(test_val_read);
     BOOST_CHECK(val == constructed_val_read);
 }
+<<<<<<< HEAD
 
 template<typename Field, typename Endianness>
 void test_plonk_lookup_table(std::size_t col_n, std::size_t op_n) {
@@ -629,6 +643,11 @@ void test_plonk_lookup_tables(std::size_t col_n, std::size_t op_n, std::size_t t
 }
 
 BOOST_AUTO_TEST_SUITE(plonk_constraint_system_details)
+=======
+ 
+// TODO add test_plonk_lookup_constraint
+BOOST_AUTO_TEST_SUITE(alt_bn128_254_scalar)
+>>>>>>> 94fae3b803a01caf926d918c33aee4430432fedb
     using curve_type = nil::crypto3::algebra::curves::alt_bn128_254;
     using field_type = typename curve_type::scalar_field_type;
     using endianness = nil::marshalling::option::big_endian;

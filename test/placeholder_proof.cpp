@@ -374,12 +374,10 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     }else {
         test_placeholder_proof<Endianness, placeholder_proof<field_type, lpc_placeholder_params_type>>(lpc_proof);
     }
-/*
     auto verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
         lpc_preprocessed_public_data, lpc_proof, constraint_system, lpc_scheme
     );
     BOOST_CHECK(verifier_res);
-    */
 }
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -390,7 +388,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2)
     using curve_type = algebra::curves::bls12<381>;
     using field_type = typename curve_type::scalar_field_type;
 
-    constexpr static const std::size_t table_rows_log = 4;
+    constexpr static const std::size_t table_rows_log = 3;
     constexpr static const std::size_t table_rows = 1 << table_rows_log;
     constexpr static const std::size_t permutation_size = 4;
     constexpr static const std::size_t usable_rows = (1 << table_rows_log) - 3;
@@ -432,14 +430,18 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2)
 
 BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer){
     auto pi0 = test_global_alg_rnd_engine<field_type>();
-    auto circuit = circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>);
+    auto circuit = circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>, test_global_rnd_engine);
 
     plonk_table_description<field_type, typename circuit_t_params::arithmetization_params> desc;
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
-    typename policy_type::constraint_system_type constraint_system( circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
-
+    typename policy_type::constraint_system_type constraint_system(
+        circuit.gates,
+        circuit.copy_constraints,
+        circuit.lookup_gates,
+        circuit.lookup_tables
+    );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -668,9 +670,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
         test_placeholder_proof<Endianness, placeholder_proof<field_type, lpc_placeholder_params_type>>(proof);
     }
 
-//    bool verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
-//        preprocessed_public_data, proof, constraint_system, lpc_scheme, transcript);
-//    BOOST_CHECK(verifier_res);
+    bool verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
+        preprocessed_public_data, proof, constraint_system, lpc_scheme);
+    BOOST_CHECK(verifier_res);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -756,11 +758,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     }else {
         test_placeholder_proof<Endianness, placeholder_proof<field_type, lpc_placeholder_params_type>>(proof);
     }
-/*
     bool verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
         preprocessed_public_data, proof, constraint_system, lpc_scheme);
     BOOST_CHECK(verifier_res);
-    */
 }
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -845,5 +845,8 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     }else {
         test_placeholder_proof<Endianness, placeholder_proof<field_type, lpc_placeholder_params_type>>(proof);
     }
+    bool verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
+        preprocessed_public_data, proof, constraint_system, lpc_scheme);
+    BOOST_CHECK(verifier_res);
 }
 BOOST_AUTO_TEST_SUITE_END()

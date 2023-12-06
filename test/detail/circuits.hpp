@@ -355,7 +355,7 @@ namespace nil {
 
                     std::vector<plonk_constraint<FieldType>> mul_gate_costraints {mul_constraint};
                     plonk_gate<FieldType, plonk_constraint<FieldType>> mul_gate(1, mul_gate_costraints);
-                    //test_circuit.gates.push_back(mul_gate);
+                    test_circuit.gates.push_back(mul_gate);
 
                     return test_circuit;
                 }

@@ -432,18 +432,14 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2)
 
 BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer){
     auto pi0 = test_global_alg_rnd_engine<field_type>();
-    auto circuit = circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>, test_global_rnd_engine);
+    auto circuit = circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>);
 
     plonk_table_description<field_type, typename circuit_t_params::arithmetization_params> desc;
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
-    typename policy_type::constraint_system_type constraint_system(
-        circuit.gates,
-        circuit.copy_constraints,
-        circuit.lookup_gates,
-        circuit.lookup_tables
-    );
+    typename policy_type::constraint_system_type constraint_system( circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
+
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};

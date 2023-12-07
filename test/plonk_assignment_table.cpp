@@ -322,8 +322,8 @@ BOOST_FIXTURE_TEST_CASE(assignment_table_marshalling_test, test_initializer) {
     auto circuit = circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>, test_global_rnd_engine);
 
     plonk_table_description<field_type, typename circuit_t_params::arithmetization_params> desc;
-    desc.rows_amount = table_rows;
-    desc.usable_rows_amount = usable_rows;
+    desc.rows_amount = circuit.table_rows;
+    desc.usable_rows_amount = circuit.usable_rows;
 
     typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
     typename policy_type::variable_assignment_type assignments = circuit.table;
@@ -644,8 +644,8 @@ BOOST_FIXTURE_TEST_CASE(assignment_table_marshalling_test, test_initializer) {
     auto circuit = circuit_test_7<field_type>();
     plonk_table_description<field_type, typename circuit_params::arithmetization_params> desc;
 
-    desc.rows_amount = table_rows;
-    desc.usable_rows_amount = usable_rows;
+    desc.rows_amount = circuit.table_rows;
+    desc.usable_rows_amount = circuit.usable_rows;
 
     typename policy_type::constraint_system_type constraint_system(
         circuit.gates,

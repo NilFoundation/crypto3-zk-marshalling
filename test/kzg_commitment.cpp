@@ -56,6 +56,8 @@
 #include <nil/crypto3/algebra/curves/mnt4.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/mnt4.hpp>
 
+#include <nil/crypto3/algebra/pairing/bls12.hpp> 
+
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
 #include <nil/crypto3/math/polynomial/lagrange_interpolation.hpp>
 #include <nil/crypto3/math/algorithms/unity_root.hpp>
@@ -73,11 +75,14 @@
 #include <nil/crypto3/zk/commitments/polynomial/fri.hpp>
 #include <nil/crypto3/zk/commitments/polynomial/kzg.hpp>
 #include <nil/crypto3/marshalling/zk/types/commitments/fri.hpp>
+#include <nil/crypto3/zk/commitments/detail/polynomial/eval_storage.hpp>
 
 #include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/verifier.hpp>
+
+#include <nil/crypto3/marshalling/zk/types/commitments/kzg.hpp>
 
 #include "detail/circuits.hpp"
 
@@ -144,6 +149,7 @@ struct test_initializer {
 BOOST_TEST_GLOBAL_FIXTURE(test_initializer);
 
 BOOST_AUTO_TEST_SUITE(marshalling_kzg_proof_elements)
+    using Endianness = nil::marshalling::option::big_endian;
     using curve_type = algebra::curves::bls12<381>;
     using field_type = typename curve_type::scalar_field_type;
     using transcript_hash_type = hashes::keccak_1600<512>;
@@ -213,6 +219,11 @@ BOOST_AUTO_TEST_CASE(polynomial_test) {
         kzg_preprocessed_public_data, kzg_proof, constraint_system, kzg_scheme
     );
     BOOST_CHECK(verifier_res);
+    
+    auto filled_proof = nil::crypto3::marshalling::types::fill_eval_proof<Endianness, kzg_type>(kzg_proof);
+    auto _proof = nil::crypto3::marshalling::types::make_eval_proof<Endianness, kzg_type>(filled_proof);
+    BOOST_CHECK(kzg_proof == _proof);
+
 }
 BOOST_AUTO_TEST_CASE(marshalling_kzg_basic_test) {
     BOOST_TEST(true);

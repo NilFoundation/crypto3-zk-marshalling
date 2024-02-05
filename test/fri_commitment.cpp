@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_SUITE(marshalling_fri_proof_elements)
     }
 
     BOOST_AUTO_TEST_CASE(fri_grinding_proof_test){
-            nil::crypto3::marshalling::types::batch_info_type batch_info;
+        nil::crypto3::marshalling::types::batch_info_type batch_info;
         batch_info[0] = 1;
         batch_info[1] = 5;
         batch_info[3] = 6;

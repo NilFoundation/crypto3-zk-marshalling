@@ -195,7 +195,7 @@ void test_placeholder_proof(const ProofType &proof, const CommitmentParamsType& 
 
     proof_marshalling_type test_val_read;
     auto read_iter = cv.begin();
-    test_val_read.read(read_iter, cv.size());
+    status = test_val_read.read(read_iter, cv.size());
     BOOST_CHECK(status == nil::marshalling::status_type::success);
     auto constructed_val_read = types::make_placeholder_proof<Endianness, ProofType>(test_val_read);
     BOOST_CHECK(proof == constructed_val_read);

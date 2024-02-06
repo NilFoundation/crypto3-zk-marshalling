@@ -58,6 +58,8 @@ add_library(${CMAKE_WORKSPACE_NAME}_${CURRENT_PROJECT_NAME} INTERFACE)
 set_target_properties(${CMAKE_WORKSPACE_NAME}_${CURRENT_PROJECT_NAME} PROPERTIES
                       EXPORT_NAME ${CURRENT_PROJECT_NAME})
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v")
+
 target_include_directories(${CMAKE_WORKSPACE_NAME}_${CURRENT_PROJECT_NAME} INTERFACE
                            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                            "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>")

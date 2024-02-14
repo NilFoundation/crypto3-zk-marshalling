@@ -67,11 +67,10 @@ target_link_libraries(${CMAKE_WORKSPACE_NAME}_${CURRENT_PROJECT_NAME} INTERFACE
 
                       crypto3::multiprecision
                       crypto3::algebra
-                      crypto3::zk
                       crypto3::pubkey
                       crypto3::pkpad
-                      crypto3::containers
-                      crypto3::math
+                      # crypto3::math, zk and containers can not be listed as dependencies
+                      # we want to preserve the ability to swap them with actor versions
 
                       ${CMAKE_WORKSPACE_NAME}::crypto3_multiprecision
                       ${CMAKE_WORKSPACE_NAME}::crypto3_algebra

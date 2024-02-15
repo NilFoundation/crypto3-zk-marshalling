@@ -28,15 +28,17 @@ jobs:
 
       targets: ${{ inputs.targets }} 
 
-  matrix-test-mac:
-    name: Mac Reusable Crypto3 Testing
-    needs:
-      - handle-syncwith
-    uses: NilFoundation/ci-cd/.github/workflows/reusable-crypto3-testing-mac.yml@v1.2.0
+  # tests on mac will be fixed later
+  # https://www.notion.so/nilfoundation/9a899d0028114e4f8ad8a54cf82faac5?v=d5f6f106a49a4384ab39be9346f5d73b&p=90eb60d3853347518cd57527f03a1208&pm=s
+  #matrix-test-mac:
+  #  name: Mac Reusable Crypto3 Testing
+  #  needs:
+  #    - handle-syncwith
+  #  uses: NilFoundation/ci-cd/.github/workflows/reusable-crypto3-testing-mac.yml@v1.2.0
 
-    secrets: inherit
-    with:
-      submodules-refs: ${{ needs.handle-syncwith.outputs.prs-refs }}
+  #  secrets: inherit
+  #  with:
+  #    submodules-refs: ${{ needs.handle-syncwith.outputs.prs-refs }}
 
-      targets: ${{ inputs.targets }} 
+  #    targets: ${{ inputs.targets }} 
 

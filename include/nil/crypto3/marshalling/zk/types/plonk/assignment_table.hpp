@@ -127,17 +127,9 @@ namespace nil {
                     const std::size_t columns_amount,
                     const std::size_t rows_amount) {
 
-                    std::vector<std::vector<FieldValueType>> result;
-                    result.resize(columns_amount);
-                    for (std::size_t i = 0; i < columns_amount; i++) {
-                        result[i].resize(rows_amount);
-                    }
-                    if (field_elem_vector.value().size() != columns_amount * rows_amount) {
-                        throw std::invalid_argument(
-                            "Field element vector size should be equal to columns amount * rows amount. Field element vector size = " +
-                            std::to_string(field_elem_vector.value().size()) +
-                            ", columns amount * rows amount = " + std::to_string(columns_amount * rows_amount));
-                    }
+                    std::vector<std::vector<FieldValueType>> result(
+                        columns_amount, std::vector<FieldValueType>(rows_amount));
+                    BOOST_ASSERT(field_elem_vector.value().size() == columns_amount * rows_amount);
                     std::size_t cur = 0;
                     for (std::size_t i = 0; i < columns_amount; i++) {
                         for (std::size_t j = 0; j < rows_amount; j++, cur++) {

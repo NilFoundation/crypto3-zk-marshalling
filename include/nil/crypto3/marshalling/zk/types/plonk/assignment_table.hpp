@@ -105,11 +105,10 @@ namespace nil {
                     field_element_vector_type result;
                     result.value().reserve(size * columns.size());
                     for (std::size_t column_number = 0; column_number < columns.size(); column_number++) {
-                        std::size_t i = 0;
-                        for (; i < columns[column_number].size(); i++) {
+                        for (std::size_t i = 0; i < columns[column_number].size(); i++) {
                             result.value().push_back(field_element_type(columns[column_number][i]));
                         }
-                        for (; i < size; i++) {
+                        for (std::size_t i = columns[column_number].size(); i < size; i++) {
                             result.value().push_back(field_element_type(padding));
                         }
                     }

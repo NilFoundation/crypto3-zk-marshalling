@@ -51,8 +51,10 @@ namespace nil {
     namespace crypto3 {
         namespace marshalling {
             namespace types {
+
+                /* CommitmentSchemeType is like lpc_commitment_scheme */
                 template <typename TTypeBase, typename CommitmentSchemeType>
-                struct commitment{
+                struct commitment<TTypeBase, CommitmentSchemeType, std::enable_if_t<CommitmentSchemeType::is_lpc> > {
                     using type = typename merkle_node_value< TTypeBase, typename CommitmentSchemeType::commitment_type>::type;
                 };
 
@@ -62,15 +64,15 @@ namespace nil {
                     return fill_merkle_node_value<typename CommitmentSchemeType::commitment_type, Endianness>( commitment );
                 }
 
-                template <typename Endianness, typename CommitmentSchemeType >
+                template <typename Endianness, typename CommitmentSchemeType>
                 typename CommitmentSchemeType::commitment_type
-                make_commitment(const typename commitment<nil::marshalling::field_type<Endianness>, CommitmentSchemeType>::type &filled_commitment){
+                make_commitment(typename commitment<nil::marshalling::field_type<Endianness>, CommitmentSchemeType>::type const& filled_commitment){
                     return make_merkle_node_value<typename CommitmentSchemeType::commitment_type, Endianness>( filled_commitment );
                 }
 
                 // FOR LPC only because of basic_fri field
-                template <typename TTypeBase, typename LPC >
-                struct eval_proof{
+                template <typename TTypeBase, typename LPC>
+                struct eval_proof<TTypeBase, LPC, std::enable_if_t<LPC::is_batched_list_polynomial_commitment> > {
                     using type = nil::marshalling::types::bundle<
                         TTypeBase,
                         std::tuple<
@@ -83,7 +85,7 @@ namespace nil {
                     >;
                 };
 
-                template<typename Endianness, typename LPC>
+                template<typename Endianness, typename LPC, std::enable_if_t<LPC::is_batched_list_polynomial_commitment, bool> = true >
                 typename eval_proof<nil::marshalling::field_type<Endianness>, LPC>::type
                 fill_eval_proof( const typename LPC::proof_type &proof, const typename LPC::fri_type::params_type& fri_params){
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
@@ -101,7 +103,7 @@ namespace nil {
                     );
                 }
 
-                template<typename Endianness, typename LPC>
+                template<typename Endianness, typename LPC, std::enable_if_t<LPC::is_batched_list_polynomial_commitment, bool> = true >
                 typename LPC::proof_type make_eval_proof(const typename eval_proof<nil::marshalling::field_type<Endianness>, LPC>::type &filled_proof){
                     typename LPC::proof_type proof;
 

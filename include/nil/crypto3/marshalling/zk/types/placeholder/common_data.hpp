@@ -39,7 +39,9 @@
 
 #include <nil/crypto3/marshalling/algebra/types/field_element.hpp>
 
+#include <nil/crypto3/marshalling/zk/types/commitments/eval_storage.hpp>
 #include <nil/crypto3/marshalling/zk/types/commitments/lpc.hpp>
+#include <nil/crypto3/marshalling/zk/types/commitments/kzg.hpp>
 #include <nil/crypto3/marshalling/containers/types/merkle_proof.hpp>
 
 namespace nil {

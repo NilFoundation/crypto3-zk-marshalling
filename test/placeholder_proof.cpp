@@ -25,10 +25,9 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------//
 
-#include "nil/crypto3/zk/snark/arithmetization/plonk/table_description.hpp"
 #define BOOST_TEST_MODULE crypto3_marshalling_placeholder_proof_test
 
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -71,6 +70,7 @@
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/profiling.hpp>
+#include <nil/crypto3/zk/snark/arithmetization/plonk/table_description.hpp>
 
 #include <nil/crypto3/math/algorithms/unity_root.hpp>
 #include <nil/crypto3/math/polynomial/lagrange_interpolation.hpp>

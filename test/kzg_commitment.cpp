@@ -2,7 +2,7 @@
 // Copyright (c) 2021 Mikhail Komarov <nemo@nil.foundation>
 // Copyright (c) 2021 Nikita Kaskov <nbering@nil.foundation>
 // Copyright (c) 2021 Ilias Khairullin <ilias@nil.foundation>
-// Copyright (c) 2023 Vasiliy Olekhov <vasiliy.olekhov@nil.foundation>
+// Copyright (c) 2024 Vasiliy Olekhov <vasiliy.olekhov@nil.foundation>
 //
 // MIT License
 //
@@ -25,9 +25,10 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------//
 
+#include "nil/crypto3/zk/commitments/batched_commitment.hpp"
 #define BOOST_TEST_MODULE crypto3_marshalling_kzg_commitment_test
 
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -48,15 +49,24 @@
 #include <nil/crypto3/multiprecision/number.hpp>
 
 #include <nil/crypto3/algebra/random_element.hpp>
-#include <nil/crypto3/algebra/curves/bls12.hpp>
-#include <nil/crypto3/algebra/curves/alt_bn128.hpp>
-#include <nil/crypto3/algebra/fields/arithmetic_params/alt_bn128.hpp>
 #include <nil/crypto3/algebra/curves/pallas.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/pallas.hpp>
+
 #include <nil/crypto3/algebra/curves/mnt4.hpp>
+#include <nil/crypto3/algebra/pairing/mnt4.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/mnt4.hpp>
 
+#include <nil/crypto3/algebra/curves/mnt6.hpp>
+#include <nil/crypto3/algebra/pairing/mnt6.hpp>
+#include <nil/crypto3/algebra/fields/arithmetic_params/mnt6.hpp>
+
+#include <nil/crypto3/algebra/curves/bls12.hpp>
 #include <nil/crypto3/algebra/pairing/bls12.hpp> 
+
+/*
+#include <nil/crypto3/algebra/curves/alt_bn128.hpp>
+#include <nil/crypto3/algebra/fields/arithmetic_params/alt_bn128.hpp>
+*/
 
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
 #include <nil/crypto3/math/polynomial/lagrange_interpolation.hpp>
@@ -71,171 +81,133 @@
 
 #include <nil/crypto3/random/algebraic_random_device.hpp>
 
-#include <nil/crypto3/zk/commitments/detail/polynomial/basic_fri.hpp>
-#include <nil/crypto3/zk/commitments/polynomial/fri.hpp>
-#include <nil/crypto3/zk/commitments/polynomial/kzg.hpp>
-#include <nil/crypto3/marshalling/zk/types/commitments/fri.hpp>
 #include <nil/crypto3/zk/commitments/detail/polynomial/eval_storage.hpp>
+#include <nil/crypto3/zk/commitments/polynomial/kzg.hpp>
+#include <nil/crypto3/marshalling/zk/types/commitments/kzg.hpp>
 
 #include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/verifier.hpp>
 
-#include <nil/crypto3/marshalling/zk/types/commitments/kzg.hpp>
-
 #include "detail/circuits.hpp"
 
-//using namespace nil::crypto3;
-using namespace nil::crypto3::zk::snark;
-using namespace nil::crypto3::zk::commitments;
-
-template<typename kzg_type>
-typename kzg_type::params_type create_kzg_params(std::size_t degree_log) {
-    // TODO: what cases t != d?
-    typename kzg_type::field_type::value_type alpha (7);
-    std::size_t d = 1 << degree_log;
-
-    typename kzg_type::params_type params(d, d, alpha);
-    return params;
-}
-
-// *******************************************************************************
-// * Randomness setup
-// *******************************************************************************/
-using dist_type = std::uniform_int_distribution<int>;
-std::size_t test_global_seed = 0;
-boost::random::mt11213b test_global_rnd_engine;
-template<typename FieldType>
-nil::crypto3::random::algebraic_engine<FieldType> test_global_alg_rnd_engine;
 
 
-struct test_initializer {
-    // Enumerate all fields used in tests;
-    using field1_type = algebra::curves::pallas::base_field_type;
-    test_initializer() {
-        test_global_seed = 0;
+template<
+    typename curve_type,
+    typename transcript_hash_type
+    >
+struct placeholder_class_test_initializer {
+    bool run_test() {
+        typedef typename curve_type::scalar_field_type::value_type scalar_value_type;
 
-        for (std::size_t i = 0; i + 1 < boost::unit_test::framework::master_test_suite().argc; i++) {
-            if (std::string(boost::unit_test::framework::master_test_suite().argv[i]) == "--seed") {
-                if (std::string(boost::unit_test::framework::master_test_suite().argv[i + 1]) == "random") {
-                    std::random_device rd;
-                    test_global_seed = rd();
-                    std::cout << "Random seed = " << test_global_seed << std::endl;
-                    break;
-                }
-                if (std::regex_match(boost::unit_test::framework::master_test_suite().argv[i + 1],
-                                     std::regex(("((\\+|-)?[[:digit:]]+)(\\.(([[:digit:]]+)?))?")))) {
-                    test_global_seed = atoi(boost::unit_test::framework::master_test_suite().argv[i + 1]);
-                    break;
-                }
-            }
-        }
+        using kzg_type = zk::commitments::batched_kzg<curve_type, transcript_hash_type>;
+        typedef typename kzg_type::transcript_type transcript_type;
+        using kzg_scheme_type = typename zk::commitments::kzg_commitment_scheme_v2<kzg_type>;
+        using endianness = nil::marshalling::option::big_endian;
 
-        BOOST_TEST_MESSAGE("test_global_seed = " << test_global_seed);
-        test_global_rnd_engine = boost::random::mt11213b(test_global_seed);
-        test_global_alg_rnd_engine<field1_type> = nil::crypto3::random::algebraic_engine<field1_type>(test_global_seed);
-    }
-    void setup() {
-    }
+        scalar_value_type alpha = 7;
+        auto params = kzg_scheme_type::create_params(8, alpha);
+        kzg_scheme_type kzg(params);
 
-    void teardown() {
-    }
+        typename kzg_type::batch_of_polynomials_type polys(4);
 
-    ~test_initializer() {
+        polys[0].template from_coefficients<std::vector<scalar_value_type>>({{ 1,  2,  3,  4,  5,  6,  7,  8}});
+        polys[1].template from_coefficients<std::vector<scalar_value_type>>({{11, 12, 13, 14, 15, 16, 17, 18}});
+        polys[2].template from_coefficients<std::vector<scalar_value_type>>({{21, 22, 23, 24, 25, 26, 27, 28}});
+        polys[3].template from_coefficients<std::vector<scalar_value_type>>({{31, 32, 33, 34, 35, 36, 37, 38}});
+
+
+        std::size_t batch_id = 0;
+
+        kzg.append_to_batch(batch_id, polys);
+        std::map<std::size_t, typename kzg_scheme_type::commitment_type> commitments;
+        commitments[batch_id] = kzg.commit(batch_id);
+
+        std::set<scalar_value_type> points_0 = {101, 2, 3};
+        std::set<scalar_value_type> points_1 = {102, 2, 3};
+        std::set<scalar_value_type> points_2 = {  1, 2, 3};
+        std::set<scalar_value_type> points_3 = {104, 2, 3};
+        kzg.append_eval_points(batch_id, 0, points_0);
+        kzg.append_eval_points(batch_id, 1, points_1);
+        kzg.append_eval_points(batch_id, 2, points_2);
+        kzg.append_eval_points(batch_id, 3, points_3);
+
+        transcript_type transcript;
+        auto proof = kzg.proof_eval(transcript);
+
+        auto filled_proof = nil::crypto3::marshalling::types::fill_eval_proof<endianness, kzg_scheme_type>(proof);
+        auto _proof = nil::crypto3::marshalling::types::make_eval_proof<endianness, kzg_scheme_type>(filled_proof);
+
+        BOOST_CHECK( _proof == proof);
+
+        transcript_type transcript_verification;
+        bool result = kzg.verify_eval(_proof, commitments, transcript_verification);
+
+        std::cout << "test completed for [" << typeid(curve_type).name() << "]" <<std::endl;
+
+        return result;
     }
 };
 
-BOOST_TEST_GLOBAL_FIXTURE(test_initializer);
+BOOST_AUTO_TEST_SUITE(placeholder_class)
+    using TestFixtures = boost::mpl::list<
+        placeholder_class_test_initializer< algebra::curves::bls12_381, hashes::keccak_1600<256> >,
+        placeholder_class_test_initializer< algebra::curves::mnt4_298, hashes::keccak_1600<256> >,
+        placeholder_class_test_initializer< algebra::curves::mnt6_298, hashes::keccak_1600<256> >
+        >;
 
-BOOST_AUTO_TEST_SUITE(marshalling_kzg_proof_elements)
-    using Endianness = nil::marshalling::option::big_endian;
-    using curve_type = algebra::curves::bls12<381>;
-    using field_type = typename curve_type::scalar_field_type;
-    using transcript_hash_type = hashes::keccak_1600<512>;
-
-    struct placeholder_test_params {
-        using merkle_hash_type = hashes::keccak_1600<512>;
-
-        constexpr static const std::size_t witness_columns = 3;
-        constexpr static const std::size_t public_input_columns = 1;
-        constexpr static const std::size_t constant_columns = 0;
-        constexpr static const std::size_t selector_columns = 2;
-
-        using arithmetization_params =
-            plonk_arithmetization_params<witness_columns, public_input_columns, constant_columns, selector_columns>;
-
-        constexpr static const std::size_t lambda = 1;
-        constexpr static const std::size_t m = 2;
-    };
-    using circuit_t_params = placeholder_circuit_params<
-        field_type,
-        typename placeholder_test_params::arithmetization_params
-    >;
-
-    using kzg_type = zk::commitments::batched_kzg<curve_type, transcript_hash_type>;
-    using kzg_scheme_type = typename zk::commitments::kzg_commitment_scheme<kzg_type>;
-    using kzg_placeholder_params_type = placeholder_params<circuit_t_params, kzg_scheme_type>;
-    using commitment_scheme_params_type = commitment_scheme_params_type<field_type, std::vector<std::uint8_t>>;
-    //using commitment_scheme_dummy_type = dummy_commitment_scheme_type<commitment_scheme_params_type, transcript_hash_type>;
-    using placeholder_params_type = placeholder_params<circuit_t_params, kzg_scheme_type>;
-    using policy_type = zk::snark::detail::placeholder_policy<field_type, placeholder_params_type>;
-
-BOOST_AUTO_TEST_CASE(polynomial_test) {
-    typename field_type::value_type pi0 = test_global_alg_rnd_engine<field_type>();
-    auto circuit = zk::snark::circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>);
-
-    plonk_table_description<field_type, typename circuit_t_params::arithmetization_params> desc;
-    
-    desc.rows_amount = circuit.table_rows;
-    desc.usable_rows_amount = circuit.usable_rows;
-
-    std::size_t table_rows_log = 4;
-
-    typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
-    typename policy_type::variable_assignment_type assignments = circuit.table;
-    
-    std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
-
-    // KZG commitment scheme
-    auto kzg_params = create_kzg_params<kzg_type>(table_rows_log);
-    kzg_scheme_type kzg_scheme(kzg_params);
-
-    typename placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type
-        kzg_preprocessed_public_data = placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::process(
-            constraint_system, assignments.public_table(), desc, kzg_scheme, columns_with_copy_constraints.size()
-        );
-
-    typename placeholder_private_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type
-        kzg_preprocessed_private_data = placeholder_private_preprocessor<field_type, kzg_placeholder_params_type>::process(
-            constraint_system, assignments.private_table(), desc
-        );
-
-    auto kzg_proof = placeholder_prover<field_type, kzg_placeholder_params_type>::process(
-        kzg_preprocessed_public_data, kzg_preprocessed_private_data, desc, constraint_system, assignments, kzg_scheme
-    );
-
-    bool verifier_res = placeholder_verifier<field_type, kzg_placeholder_params_type>::process(
-        kzg_preprocessed_public_data, kzg_proof, constraint_system, kzg_scheme
-    );
-    BOOST_CHECK(verifier_res);
-    
-    auto filled_proof = nil::crypto3::marshalling::types::fill_eval_proof<Endianness, kzg_type>(kzg_proof);
-    auto _proof = nil::crypto3::marshalling::types::make_eval_proof<Endianness, kzg_type>(filled_proof);
-    BOOST_CHECK(kzg_proof == _proof);
-
+BOOST_AUTO_TEST_CASE_TEMPLATE(placeholder_class_test, F, TestFixtures) {
+    F fixture;
+    BOOST_CHECK(fixture.run_test());
 }
-BOOST_AUTO_TEST_CASE(marshalling_kzg_basic_test) {
-    BOOST_TEST(true);
-}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(marshalling_kzg_real_proof)
-BOOST_AUTO_TEST_CASE(polynomial_test) {
-    BOOST_TEST(true);
-}
-BOOST_AUTO_TEST_CASE(marshalling_kzg_basic_test) {
-    BOOST_TEST(true);
-}
-BOOST_AUTO_TEST_SUITE_END()
+template<
+    typename curve_type,
+    typename transcript_hash_type
+    >
+struct batched_kzg_test_initializer {
+    bool run_test() {
+        typedef typename curve_type::scalar_field_type::value_type scalar_value_type;
 
+        using kzg_type = zk::commitments::batched_kzg<curve_type, transcript_hash_type>;
+        typedef typename kzg_type::transcript_type transcript_type;
+        using endianness = nil::marshalling::option::big_endian;
+
+        scalar_value_type alpha = 7;
+        typename kzg_type::params_type params(8, 8, alpha);
+
+        typename kzg_type::poly_type poly;
+
+        poly.template from_coefficients<std::vector<scalar_value_type>>({{ 1,  2,  3,  4,  5,  6,  7,  8}});
+
+        auto commitment = zk::algorithms::commit_one<kzg_type>(params, poly);
+
+        auto filled_commitment = marshalling::types::fill_commitment<endianness, kzg_type>(commitment);
+        auto _commitment = marshalling::types::make_commitment<endianness, kzg_type>(filled_commitment);
+
+        bool result = commitment == _commitment;
+        BOOST_CHECK( result );
+
+        std::cout << "test completed for [" << typeid(curve_type).name() << "]" <<std::endl;
+
+        return result;
+    }
+};
+
+BOOST_AUTO_TEST_SUITE(batched_kzg_marshalling)
+    using TestFixtures = boost::mpl::list<
+        batched_kzg_test_initializer< algebra::curves::bls12_381, hashes::keccak_1600<256> >,
+        batched_kzg_test_initializer< algebra::curves::mnt4_298, hashes::keccak_1600<256> >,
+        batched_kzg_test_initializer< algebra::curves::mnt6_298, hashes::keccak_1600<256> >
+        >;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(batched_kzg_test, F, TestFixtures) {
+    F fixture;
+    BOOST_CHECK(fixture.run_test());
+}
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -46,70 +46,81 @@
 #include <nil/crypto3/marshalling/zk/types/commitments/eval_storage.hpp>
 #include <nil/crypto3/marshalling/containers/types/merkle_proof.hpp>
 
+#include <nil/crypto3/zk/commitments/type_traits.hpp>
 
 namespace nil {
     namespace crypto3 {
         namespace marshalling {
             namespace types {
+                // Default commitment type
 
-                /* CommitmentSchemeType is like lpc_commitment_scheme */
-                template <typename TTypeBase, typename CommitmentSchemeType>
-                struct commitment<TTypeBase, CommitmentSchemeType, std::enable_if_t<CommitmentSchemeType::is_lpc> > {
-                    using type = typename merkle_node_value< TTypeBase, typename CommitmentSchemeType::commitment_type>::type;
+                /* LPCScheme is like lpc_commitment_scheme */
+                template <typename TTypeBase, typename LPCScheme>
+                struct commitment<TTypeBase, LPCScheme, std::enable_if_t<nil::crypto3::zk::is_lpc<LPCScheme>>> {
+                    using type = typename merkle_node_value< TTypeBase, typename LPCScheme::commitment_type>::type;
                 };
 
-                template <typename Endianness, typename CommitmentSchemeType>
-                typename commitment<nil::marshalling::field_type<Endianness>, CommitmentSchemeType>::type
-                fill_commitment(typename CommitmentSchemeType::commitment_type commitment){
-                    return fill_merkle_node_value<typename CommitmentSchemeType::commitment_type, Endianness>( commitment );
+                template <typename Endianness, typename LPCScheme>
+                typename commitment<
+                    nil::marshalling::field_type<Endianness>, LPCScheme,
+                    std::enable_if_t<nil::crypto3::zk::is_lpc<LPCScheme>>
+                >::type
+                fill_commitment(typename LPCScheme::commitment_type commitment){
+                    return fill_merkle_node_value<typename LPCScheme::commitment_type, Endianness>( commitment );
                 }
 
-                template <typename Endianness, typename CommitmentSchemeType>
-                typename CommitmentSchemeType::commitment_type
-                make_commitment(typename commitment<nil::marshalling::field_type<Endianness>, CommitmentSchemeType>::type const& filled_commitment){
-                    return make_merkle_node_value<typename CommitmentSchemeType::commitment_type, Endianness>( filled_commitment );
+                template <typename Endianness, typename LPCScheme>
+                typename LPCScheme::commitment_type
+                make_commitment(typename commitment<
+                    nil::marshalling::field_type<Endianness>, LPCScheme,
+                    std::enable_if_t<nil::crypto3::zk::is_lpc<LPCScheme>>
+                >::type const& filled_commitment
+                ){
+                    return make_merkle_node_value<typename LPCScheme::commitment_type, Endianness>( filled_commitment );
                 }
 
                 // FOR LPC only because of basic_fri field
-                template <typename TTypeBase, typename LPC>
-                struct eval_proof<TTypeBase, LPC, std::enable_if_t<LPC::is_batched_list_polynomial_commitment> > {
+                template <typename TTypeBase, typename LPCScheme>
+                struct eval_proof<TTypeBase, LPCScheme, std::enable_if_t<nil::crypto3::zk::is_lpc<LPCScheme>> > {
                     using type = nil::marshalling::types::bundle<
                         TTypeBase,
                         std::tuple<
                             // Evaluation points storage z
-                            eval_storage<TTypeBase, typename LPC::eval_storage_type>,
+                            eval_storage<TTypeBase, typename LPCScheme::eval_storage_type>,
 
                             // One fri proof
-                            typename fri_proof<TTypeBase, typename LPC::basic_fri>::type
+                            typename fri_proof<TTypeBase, typename LPCScheme::basic_fri>::type
                         >
                     >;
                 };
 
-                template<typename Endianness, typename LPC, std::enable_if_t<LPC::is_batched_list_polynomial_commitment, bool> = true >
-                typename eval_proof<nil::marshalling::field_type<Endianness>, LPC>::type
-                fill_eval_proof( const typename LPC::proof_type &proof, const typename LPC::fri_type::params_type& fri_params){
+                template<typename Endianness, typename LPCScheme>
+                typename eval_proof<nil::marshalling::field_type<Endianness>, LPCScheme,std::enable_if_t<nil::crypto3::zk::is_lpc<LPCScheme>>>::type
+                fill_eval_proof( const typename LPCScheme::proof_type &proof, const typename LPCScheme::fri_type::params_type& fri_params){
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
 
                     nil::crypto3::marshalling::types::batch_info_type batch_info = proof.z.get_batch_info();
 
-                    auto filled_z = fill_eval_storage<Endianness, typename LPC::eval_storage_type>(proof.z);
+                    auto filled_z = fill_eval_storage<Endianness, typename LPCScheme::eval_storage_type>(proof.z);
 
-                    typename fri_proof<TTypeBase, typename LPC::basic_fri>::type filled_fri_proof = fill_fri_proof<Endianness, typename LPC::basic_fri>(
+                    typename fri_proof<TTypeBase, typename LPCScheme::basic_fri>::type filled_fri_proof = fill_fri_proof<Endianness, typename LPCScheme::basic_fri>(
                         proof.fri_proof, batch_info, fri_params
                     );
 
-                    return typename eval_proof<TTypeBase, LPC>::type(
+                    return typename eval_proof<TTypeBase, LPCScheme>::type(
                         std::tuple( filled_z, filled_fri_proof)
                     );
                 }
 
-                template<typename Endianness, typename LPC, std::enable_if_t<LPC::is_batched_list_polynomial_commitment, bool> = true >
-                typename LPC::proof_type make_eval_proof(const typename eval_proof<nil::marshalling::field_type<Endianness>, LPC>::type &filled_proof){
-                    typename LPC::proof_type proof;
+                template<typename Endianness, typename LPCScheme>
+                typename LPCScheme::proof_type make_eval_proof(
+                    const typename eval_proof<nil::marshalling::field_type<Endianness>, LPCScheme, std::enable_if_t<nil::crypto3::zk::is_lpc<LPCScheme>>>::type &filled_proof
+                ){
+                    typename LPCScheme::proof_type proof;
 
-                    proof.z = make_eval_storage<Endianness, typename LPC::eval_storage_type>(std::get<0>(filled_proof.value()));
+                    proof.z = make_eval_storage<Endianness, typename LPCScheme::eval_storage_type>(std::get<0>(filled_proof.value()));
                     auto batch_info = proof.z.get_batch_info();
-                    proof.fri_proof = make_fri_proof<Endianness, typename LPC::basic_fri>(std::get<1>(filled_proof.value()), batch_info);
+                    proof.fri_proof = make_fri_proof<Endianness, typename LPCScheme::basic_fri>(std::get<1>(filled_proof.value()), batch_info);
 
                     return proof;
                 }

@@ -25,7 +25,6 @@
 #include <nil/crypto3/algebra/fields/arithmetic_params/pallas.hpp>
 #include <nil/crypto3/algebra/random_element.hpp>
 
-
 #include <nil/crypto3/algebra/curves/mnt4.hpp>
 #include <nil/crypto3/algebra/pairing/mnt4.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/mnt4.hpp>
@@ -47,8 +46,7 @@
 #include <nil/crypto3/random/algebraic_random_device.hpp>
 #include <nil/crypto3/random/algebraic_engine.hpp>
 
-#include <nil/crypto3/marshalling/zk/types/placeholder/common_data.hpp>
-
+#include <nil/crypto3/zk/commitments/type_traits.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/verifier.hpp>
@@ -59,6 +57,11 @@
 #include <nil/crypto3/math/algorithms/unity_root.hpp>
 #include <nil/crypto3/math/polynomial/lagrange_interpolation.hpp>
 #include <nil/crypto3/math/algorithms/calculate_domain_set.hpp>
+
+#include <nil/crypto3/marshalling/zk/types/commitments/eval_storage.hpp>
+#include <nil/crypto3/marshalling/zk/types/commitments/kzg.hpp>
+#include <nil/crypto3/marshalling/zk/types/commitments/lpc.hpp>
+#include <nil/crypto3/marshalling/zk/types/placeholder/common_data.hpp>
 
 #include "./detail/circuits.hpp"
 
@@ -135,7 +138,7 @@ void test_placeholder_common_data(CommonDataType common_data, std::string folder
 
     auto filled_common_data = nil::crypto3::marshalling::types::fill_placeholder_common_data<Endianness, CommonDataType>(common_data);
     nil::crypto3::marshalling::types::make_placeholder_common_data<Endianness,CommonDataType>(filled_common_data);
-/*  auto [_common_data, _table_description] = nil::crypto3::marshalling::types::make_placeholder_common_data<Endianness,CommonDataType>(filled_common_data);
+    auto [_common_data, _table_description] = nil::crypto3::marshalling::types::make_placeholder_common_data<Endianness,CommonDataType>(filled_common_data);
     BOOST_CHECK(common_data == _common_data);
     BOOST_CHECK(_table_description.witness_columns == _common_data.witness_columns);
     BOOST_CHECK(_table_description.public_input_columns == _common_data.public_input_columns);
@@ -172,7 +175,7 @@ void test_placeholder_common_data(CommonDataType common_data, std::string folder
         print_hex_byteblob(out, cv.begin(), cv.end(), false);
         out.close();
         std::cout << "common data saved to '" << folder_name << "'" << std::endl;
-    }*/
+    }
 }
 
 // *******************************************************************************
@@ -901,10 +904,14 @@ struct placeholder_kzg_test_fixture_v2 : public test_initializer {
         typename placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type
             kzg_preprocessed_public_data =
             placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::process(
-                    constraint_system, assignments.public_table(), desc, kzg_scheme, columns_with_copy_constraints.size()
-                    );
+                constraint_system, assignments.public_table(), desc, kzg_scheme, columns_with_copy_constraints.size()
+            );
 
         using common_data_type = typename placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type::common_data_type;
+            using Endianness = nil::marshalling::option::big_endian;
+        using TTypeBase = nil::marshalling::field_type<Endianness>;
+        nil::crypto3::marshalling::types::placeholder_common_data<TTypeBase, common_data_type> filled_data;
+
         if(has_argv("--print"))
             test_placeholder_common_data<common_data_type>(kzg_preprocessed_public_data.common_data, std::string("circuit_") + typeid(curve_type).name());
         else
@@ -930,8 +937,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg_v2)
         selector_columns_t,
         usable_rows_t,
         permutation_t, true>
-        /*
-    , placeholder_kzg_test_fixture<
+/*  , placeholder_kzg_test_fixture<
         algebra::curves::alt_bn128_254,
         hashes::keccak_1600<256>,
         hashes::keccak_1600<256>,
@@ -974,7 +980,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg_v2)
         usable_rows_t,
         4,
         true>
-        */
+    */
     >;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(prover_test, F, TestFixtures) {

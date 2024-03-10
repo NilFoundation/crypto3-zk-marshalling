@@ -46,8 +46,10 @@ namespace nil {
         namespace marshalling {
             namespace types {
 
-                // Default commitment type
-                template <typename TTypeBase, typename commitment_scheme_type, typename enable = void> struct commitment;
+                // Default commitment marshalling typetype.
+                template <typename TTypeBase, typename commitment_scheme_type, typename enable = void >
+                struct commitment;
+
                 // Default commitment scheme proof marshalling type in fact it'll be one of tuple's elements for LPC and KZG
                 template <typename TTypeBase, typename commitment_scheme_type, typename enable = void > struct eval_proof;
 

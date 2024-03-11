@@ -928,59 +928,60 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg_v2)
 
     using TestFixtures = boost::mpl::list<
     placeholder_kzg_test_fixture_v2<
-        algebra::curves::bls12_381,
-        hashes::keccak_1600<256>,
-        hashes::keccak_1600<256>,
-        witness_columns_t,
-        public_columns_t,
-        constant_columns_t,
-        selector_columns_t,
-        usable_rows_t,
-        permutation_t, true>
-/*  , placeholder_kzg_test_fixture<
-        algebra::curves::alt_bn128_254,
-        hashes::keccak_1600<256>,
-        hashes::keccak_1600<256>,
-        witness_columns_t,
-        public_columns_t,
-        constant_columns_t,
-        selector_columns_t,
-        usable_rows_t,
-        4, true>
+    algebra::curves::bls12_381,
+    hashes::keccak_1600<256>,
+    hashes::keccak_1600<256>,
+    witness_columns_t,
+    public_columns_t,
+    constant_columns_t,
+    selector_columns_t,
+    usable_rows_t,
+    permutation_t, true>
+    /*
+       , placeholder_kzg_test_fixture<
+       algebra::curves::alt_bn128_254,
+       hashes::keccak_1600<256>,
+       hashes::keccak_1600<256>,
+       witness_columns_t,
+       public_columns_t,
+       constant_columns_t,
+       selector_columns_t,
+       usable_rows_t,
+       4, true>
+       */
     , placeholder_kzg_test_fixture_v2<
-        algebra::curves::mnt4_298,
-        hashes::keccak_1600<256>,
-        hashes::keccak_1600<256>,
-        witness_columns_t,
-        public_columns_t,
-        constant_columns_t,
-        selector_columns_t,
-        usable_rows_t,
-        permutation_t, true>
+    algebra::curves::mnt4_298,
+    hashes::keccak_1600<256>,
+    hashes::keccak_1600<256>,
+    witness_columns_t,
+    public_columns_t,
+    constant_columns_t,
+    selector_columns_t,
+    usable_rows_t,
+    permutation_t, true>
     , placeholder_kzg_test_fixture_v2<
-        algebra::curves::mnt6_298,
-        hashes::keccak_1600<256>,
-        hashes::keccak_1600<256>,
-        witness_columns_t,
-        public_columns_t,
-        constant_columns_t,
-        selector_columns_t,
-        usable_rows_t,
-        permutation_t, true>
-        */
-        /*, -- Not yet implemented
-    placeholder_kzg_test_fixture<
-        algebra::curves::mnt6_298,
-        hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::mnt6_298>>,
-        hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::mnt6_298>>,
-        witness_columns_t,
-        public_columns_t,
-        constant_columns_t,
-        selector_columns_t,
-        usable_rows_t,
-        4,
-        true>
-    */
+    algebra::curves::mnt6_298,
+    hashes::keccak_1600<256>,
+    hashes::keccak_1600<256>,
+    witness_columns_t,
+    public_columns_t,
+    constant_columns_t,
+    selector_columns_t,
+    usable_rows_t,
+    permutation_t, true>
+    /*, -- Not yet implemented
+      placeholder_kzg_test_fixture<
+      algebra::curves::mnt6_298,
+      hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::mnt6_298>>,
+      hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::mnt6_298>>,
+      witness_columns_t,
+      public_columns_t,
+      constant_columns_t,
+      selector_columns_t,
+      usable_rows_t,
+      4,
+      true>
+      */
     >;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(prover_test, F, TestFixtures) {

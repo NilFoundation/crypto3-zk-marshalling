@@ -46,10 +46,22 @@
 #include <nil/crypto3/multiprecision/number.hpp>
 
 #include <nil/crypto3/algebra/random_element.hpp>
+
 #include <nil/crypto3/algebra/curves/bls12.hpp>
+#include <nil/crypto3/algebra/pairing/bls12.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/bls12.hpp>
+
+#include <nil/crypto3/algebra/curves/mnt4.hpp>
+#include <nil/crypto3/algebra/pairing/mnt4.hpp>
+#include <nil/crypto3/algebra/fields/arithmetic_params/mnt4.hpp>
+
+#include <nil/crypto3/algebra/curves/mnt6.hpp>
+#include <nil/crypto3/algebra/pairing/mnt6.hpp>
+#include <nil/crypto3/algebra/fields/arithmetic_params/mnt6.hpp>
+/*
 #include <nil/crypto3/algebra/curves/alt_bn128.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/alt_bn128.hpp>
+*/
 #include <nil/crypto3/algebra/curves/pallas.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/pallas.hpp>
 #include <nil/crypto3/algebra/random_element.hpp>
@@ -183,7 +195,7 @@ void test_placeholder_proof(const ProofType &proof, const CommitmentParamsType& 
     using namespace nil::crypto3::marshalling;
 
     using TTypeBase = nil::marshalling::field_type<Endianness>;
-    using proof_marshalling_type = types::placeholder_proof<TTypeBase, ProofType>;
+    using proof_marshalling_type = nil::crypto3::marshalling::types::placeholder_proof<TTypeBase, ProofType>;
 
     auto filled_placeholder_proof = types::fill_placeholder_proof<Endianness, ProofType>(proof, params);
     ProofType _proof = types::make_placeholder_proof<Endianness, ProofType>(filled_placeholder_proof);
@@ -959,4 +971,175 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
         preprocessed_public_data, proof, desc, constraint_system, lpc_scheme);
     BOOST_CHECK(verifier_res);
 }
+BOOST_AUTO_TEST_SUITE_END()
+
+template<
+    typename curve_type,
+    typename merkle_hash_type,
+    typename transcript_hash_type,
+    std::size_t WitnessColumns,
+    std::size_t PublicInputColumns,
+    std::size_t ConstantColumns,
+    std::size_t SelectorColumns,
+    std::size_t usable_rows_amount,
+    std::size_t permutation,
+    bool UseGrinding = false>
+struct placeholder_kzg_test_fixture_v2 : public test_initializer {
+    using field_type = typename curve_type::scalar_field_type;
+
+    struct placeholder_test_params {
+        constexpr static const std::size_t usable_rows = usable_rows_amount;
+
+        constexpr static const std::size_t witness_columns = WitnessColumns;
+        constexpr static const std::size_t public_input_columns = PublicInputColumns;
+        constexpr static const std::size_t constant_columns = ConstantColumns;
+        constexpr static const std::size_t selector_columns = SelectorColumns;
+
+        constexpr static const std::size_t lambda = 40;
+        constexpr static const std::size_t m = 2;
+    };
+
+    using transcript_type = typename transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>;
+
+    using circuit_params = placeholder_circuit_params<field_type>;
+
+    using kzg_type = commitments::batched_kzg<curve_type, transcript_hash_type>;
+    using kzg_scheme_type = typename commitments::kzg_commitment_scheme_v2<kzg_type>;
+    using kzg_placeholder_params_type = nil::crypto3::zk::snark::placeholder_params<circuit_params, kzg_scheme_type>;
+
+    using policy_type = zk::snark::detail::placeholder_policy<field_type, kzg_placeholder_params_type>;
+
+    using circuit_type =
+        circuit_description<field_type,
+        placeholder_circuit_params<field_type>,
+        usable_rows_amount, permutation>;
+
+    placeholder_kzg_test_fixture_v2()
+        : desc(WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns)
+    {
+    }
+
+    bool run_test() {
+        test_initializer::setup();
+        typename field_type::value_type pi0 = test_global_alg_rnd_engine<field_type>();
+        circuit_type circuit = circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>);
+        desc.rows_amount = circuit.table_rows;
+        desc.usable_rows_amount = circuit.usable_rows;
+        std::size_t table_rows_log = std::log2(circuit.table_rows);
+
+        typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
+        typename policy_type::variable_assignment_type assignments = circuit.table;
+
+        std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
+
+        // KZG commitment scheme
+        typename kzg_type::field_type::value_type alpha (7);
+        auto kzg_params = kzg_scheme_type::create_params(1 << table_rows_log, alpha);
+        kzg_scheme_type kzg_scheme(kzg_params);
+
+        typename placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type
+            kzg_preprocessed_public_data =
+            placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::process(
+                constraint_system, assignments.public_table(), desc, kzg_scheme, columns_with_copy_constraints.size()
+            );
+
+        typename placeholder_private_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type
+            kzg_preprocessed_private_data = placeholder_private_preprocessor<field_type, kzg_placeholder_params_type>::process(
+                    constraint_system, assignments.private_table(), desc
+                    );
+
+        auto kzg_proof = placeholder_prover<field_type, kzg_placeholder_params_type>::process(
+                kzg_preprocessed_public_data, std::move(kzg_preprocessed_private_data), desc, constraint_system, kzg_scheme
+                );
+
+        using common_data_type = typename placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type::common_data_type;
+        using Endianness = nil::marshalling::option::big_endian;
+//        using TTypeBase = nil::marshalling::field_type<Endianness>;
+//        nil::crypto3::marshalling::types::placeholder_common_data<TTypeBase, common_data_type> filled_data;
+
+        if( has_argv("--print") ){
+            print_placeholder_proof_with_params<
+                Endianness, kzg_placeholder_params_type>
+                (kzg_preprocessed_public_data, kzg_proof, kzg_scheme, desc,
+                 std::string("circuit_") + typeid(curve_type).name());
+        } else {
+            test_placeholder_proof<
+                Endianness, placeholder_proof<field_type, kzg_placeholder_params_type>>
+                (kzg_proof, kzg_params);
+        }
+        bool verifier_res = placeholder_verifier<field_type, kzg_placeholder_params_type>::process(
+                kzg_preprocessed_public_data, kzg_proof, desc, constraint_system, kzg_scheme);
+        BOOST_CHECK(verifier_res);
+        return true;
+    }
+
+    plonk_table_description<field_type> desc;
+};
+
+
+BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg_v2)
+
+    using TestFixtures = boost::mpl::list<
+    placeholder_kzg_test_fixture_v2<
+    algebra::curves::bls12_381,
+    hashes::keccak_1600<256>,
+    hashes::keccak_1600<256>,
+    witness_columns_t,
+    public_columns_t,
+    constant_columns_t,
+    selector_columns_t,
+    usable_rows_t,
+    permutation_t, true>
+    /*
+       , placeholder_kzg_test_fixture<
+       algebra::curves::alt_bn128_254,
+       hashes::keccak_1600<256>,
+       hashes::keccak_1600<256>,
+       witness_columns_t,
+       public_columns_t,
+       constant_columns_t,
+       selector_columns_t,
+       usable_rows_t,
+       4, true>
+       */
+    , placeholder_kzg_test_fixture_v2<
+    algebra::curves::mnt4_298,
+    hashes::keccak_1600<256>,
+    hashes::keccak_1600<256>,
+    witness_columns_t,
+    public_columns_t,
+    constant_columns_t,
+    selector_columns_t,
+    usable_rows_t,
+    permutation_t, true>
+    , placeholder_kzg_test_fixture_v2<
+    algebra::curves::mnt6_298,
+    hashes::keccak_1600<256>,
+    hashes::keccak_1600<256>,
+    witness_columns_t,
+    public_columns_t,
+    constant_columns_t,
+    selector_columns_t,
+    usable_rows_t,
+    permutation_t, true>
+    /*, -- Not yet implemented
+      placeholder_kzg_test_fixture<
+      algebra::curves::mnt6_298,
+      hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::mnt6_298>>,
+      hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::mnt6_298>>,
+      witness_columns_t,
+      public_columns_t,
+      constant_columns_t,
+      selector_columns_t,
+      usable_rows_t,
+      4,
+      true>
+      */
+    >;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(prover_test, F, TestFixtures) {
+    F fixture;
+    BOOST_CHECK(fixture.run_test());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

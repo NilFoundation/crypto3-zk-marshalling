@@ -47,7 +47,9 @@ namespace nil {
     namespace crypto3 {
         namespace marshalling {
             namespace types {
-                /* KZGScheme is like batched_kzg */
+                /* KZGScheme is like batched_kzg,
+                 * commitment is a std::vector<uint8_t>, holding serialized g1 points
+                 * */
                 template <typename TTypeBase, typename KZGScheme>
                 struct commitment<TTypeBase, KZGScheme, std::enable_if_t<nil::crypto3::zk::is_kzg<KZGScheme>>> {
                     using type = nil::marshalling::types::array_list<
@@ -88,20 +90,20 @@ namespace nil {
                         TTypeBase,
                         std::tuple<
                             eval_storage<TTypeBase, typename KZGScheme::eval_storage_type>,
-                            typename curve_element<TTypeBase, typename KZGScheme::single_commitment_type::group_type>::value_type,
-                            typename curve_element<TTypeBase, typename KZGScheme::single_commitment_type::group_type>::value_type
+                            curve_element<TTypeBase, typename KZGScheme::single_commitment_type::group_type>,
+                            curve_element<TTypeBase, typename KZGScheme::single_commitment_type::group_type>
                         >
                     >;
                 };
 
                 template<typename Endianness, typename KZGScheme>
                 typename eval_proof<nil::marshalling::field_type<Endianness>, KZGScheme, std::enable_if_t<nil::crypto3::zk::is_kzg<KZGScheme>>>::type
-                fill_eval_proof( const typename KZGScheme::proof_type &proof ) {
+                fill_eval_proof( const typename KZGScheme::proof_type &proof, typename KZGScheme::params_type const& params) {
                     using TTypeBase = nil::marshalling::field_type<Endianness>;
 
                     nil::crypto3::marshalling::types::batch_info_type batch_info = proof.z.get_batch_info();
 
-                    using curve_marhsalling_type = typename curve_element<TTypeBase, typename KZGScheme::single_commitment_type::group_type>::value_type;
+                    using curve_marhsalling_type = curve_element<TTypeBase, typename KZGScheme::single_commitment_type::group_type>;
 
                     auto filled_z = fill_eval_storage<Endianness, typename KZGScheme::eval_storage_type>(proof.z);
 
@@ -121,8 +123,8 @@ namespace nil {
 
                     proof.z = make_eval_storage<Endianness, typename KZGScheme::eval_storage_type>(std::get<0>(filled_proof.value()));
                     auto batch_info = proof.z.get_batch_info();
-                    proof.pi_1= std::get<1>(filled_proof.value());
-                    proof.pi_2= std::get<2>(filled_proof.value());
+                    proof.pi_1= std::get<1>(filled_proof.value()).value();
+                    proof.pi_2= std::get<2>(filled_proof.value()).value();
 
                     return proof;
                 }

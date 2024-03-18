@@ -27,7 +27,7 @@
 
 #define BOOST_TEST_MODULE crypto3_marshalling_lpc_commitment_test
 
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
@@ -543,6 +543,10 @@ BOOST_FIXTURE_TEST_CASE(batches_num_3_test, test_initializer){
     commitments[0] = lpc_scheme_prover.commit(0);
     commitments[2] = lpc_scheme_prover.commit(2);
     commitments[3] = lpc_scheme_prover.commit(3);
+
+    auto filled_commitment = nil::crypto3::marshalling::types::fill_commitment<Endianness, lpc_scheme_type>(commitments[0]);
+    auto _commitment = nil::crypto3::marshalling::types::make_commitment<Endianness, lpc_scheme_type>(filled_commitment);
+
 
     // Generate evaluation points. Generate points outside of the basic domain
     // Generate evaluation points. Choose poin1ts outside the domain

@@ -38,8 +38,6 @@
 #include <nil/marshalling/options.hpp>
 
 #include <nil/crypto3/marshalling/algebra/types/field_element.hpp>
-
-#include <nil/crypto3/marshalling/zk/types/commitments/lpc.hpp>
 #include <nil/crypto3/marshalling/containers/types/merkle_proof.hpp>
 
 namespace nil {
@@ -154,6 +152,7 @@ namespace nil {
                         nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.constant_columns),
                         nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.selector_columns)
                     ));
+                    return result;
                 }
 
                 template<typename Endianness, typename CommonDataType>

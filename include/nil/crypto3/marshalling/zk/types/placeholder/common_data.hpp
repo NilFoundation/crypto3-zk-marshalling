@@ -40,7 +40,7 @@
 #include <nil/crypto3/marshalling/algebra/types/field_element.hpp>
 
 #include <nil/crypto3/marshalling/zk/types/commitments/commitment_params.hpp>
-#include <nil/crypto3/marshalling/zk/types/commitments/lpc.hpp>
+#include <nil/crypto3/marshalling/zk/types/commitments/eval_storage.hpp>
 #include <nil/crypto3/marshalling/containers/types/merkle_proof.hpp>
 
 namespace nil {
@@ -86,9 +86,13 @@ namespace nil {
                             nil::marshalling::types::integral<TTypeBase, octet_type>,
                             nil::marshalling::option::sequence_size_field_prefix<nil::marshalling::types::integral<TTypeBase, std::size_t>>
                         >,
-//                      commitment_scheme_type::params::type
+//                      commitment_scheme_type::params_type
                         typename nil::crypto3::marshalling::types::commitment_params<
                             TTypeBase, typename CommonDataType::commitment_params_type
+                        >::type,
+//                      commitment_scheme_type::preprocessed_data_type
+                        typename nil::crypto3::marshalling::types::commitment_preprocessed_data<
+                            TTypeBase, typename CommonDataType::commitment_scheme_type
                         >::type
                     >
                 >;
@@ -150,6 +154,10 @@ namespace nil {
                         common_data.commitment_params
                     );
 
+                    auto filled_commitment_preprocessed_data = fill_commitment_preprocessed_data<Endianness, typename CommonDataType::commitment_scheme_type>(
+                        common_data.commitment_scheme_data
+                    );
+
                     return result_type(std::make_tuple(
                         filled_commitments,
                         filled_columns_rotations,
@@ -161,8 +169,10 @@ namespace nil {
                         nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.desc.rows_amount),
                         nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.max_gates_degree),
                         filled_constraint_system_with_params_hash,
-                        filled_commitment_params
+                        filled_commitment_params,
+                        filled_commitment_preprocessed_data
                     ));
+                    return result;
                 }
 
                 template<typename Endianness, typename CommonDataType>
@@ -213,7 +223,10 @@ namespace nil {
                     typename CommonDataType::commitment_params_type commitment_params = make_commitment_params<
                         Endianness, typename CommonDataType::commitment_params_type
                     >(std::get<10>(filled_common_data.value()));
-                    typename CommonDataType::commitment_scheme_data_type commitment_data;
+
+                    typename CommonDataType::commitment_scheme_data_type commitment_data = make_commitment_preprocessed_data<
+                        Endianness, typename CommonDataType::commitment_scheme_type
+                    >(std::get<11>(filled_common_data.value()));
 
                     return CommonDataType(
                         commitments, columns_rotations,

@@ -37,6 +37,7 @@
 #include <nil/crypto3/zk/commitments/polynomial/kzg.hpp>
 
 #include <nil/crypto3/marshalling/algebra/types/field_element.hpp>
+#include <nil/crypto3/math/algorithms/calculate_domain_set.hpp>
 
 namespace nil {
     namespace crypto3 {
@@ -106,11 +107,24 @@ namespace nil {
                     return result;
                 }
 
+                template<typename Endianness, typename IntegerType>
+                std::vector<IntegerType>
+                 make_integer_vector(const nil::marshalling::types::array_list<
+                    nil::marshalling::field_type<Endianness>,
+                    nil::marshalling::types::integral<nil::marshalling::field_type<Endianness>, IntegerType>,
+                    nil::marshalling::option::sequence_size_field_prefix<
+                        nil::marshalling::types::integral<nil::marshalling::field_type<Endianness>, std::size_t>>
+                >& filled_vector) {
+                    std::vector<IntegerType> result;
+                    for( std::size_t i = 0; i < filled_vector.value().size(); i++){
+                        result.push_back(filled_vector.value()[i].value());
+                    }
+                    return result;
+                }
                 // C++ does not allow partial specialization of alias templates, so we need to use a helper struct.
                 // This struct will also be used for the dummy commitment params used in testing.
-                template<typename Endianness, typename CommitmentParamsType, typename Enable = void>
-                struct commitment_params {
-                    using TTypeBase = typename nil::marshalling::field_type<Endianness>;
+                template<typename TTypeBase, typename CommitmentParamsType, typename Enable = void>
+                struct commitment_params{
                     using type = nil::marshalling::types::bundle<
                             TTypeBase,
                             std::tuple<
@@ -121,10 +135,9 @@ namespace nil {
                 };
 
                 // Define commitment_params marshalling type for FRI.
-                template<typename Endianness, typename CommitmentParamsType>
-                struct commitment_params<Endianness, CommitmentParamsType,
+                template<typename TTypeBase, typename CommitmentParamsType>
+                struct commitment_params<TTypeBase, CommitmentParamsType,
                     typename std::enable_if_t<is_fri_commitment<CommitmentParamsType>::value>> {
-                    using TTypeBase = typename nil::marshalling::field_type<Endianness>;
                     using integral_type = nil::marshalling::types::integral<TTypeBase, std::size_t>;
                     using type =
                         nil::marshalling::types::bundle<
@@ -157,11 +170,11 @@ namespace nil {
                 // Marshalling function for FRI params.
                 template<typename Endianness, typename CommitmentParamsType,
                     typename std::enable_if<is_fri_commitment<CommitmentParamsType>::value, bool>::type = true>
-                typename commitment_params<Endianness, CommitmentParamsType>::type
+                typename commitment_params<nil::marshalling::field_type<Endianness>, CommitmentParamsType>::type
                 fill_commitment_params(const CommitmentParamsType &fri_params) {
                     using TTypeBase = typename nil::marshalling::field_type<Endianness>;
                     using FieldType = typename CommitmentParamsType::field_type;
-                    using result_type = typename commitment_params<Endianness, CommitmentParamsType>::type;
+                    using result_type = typename commitment_params<TTypeBase, CommitmentParamsType>::type;
 
                     std::vector<typename FieldType::value_type> D_unity_roots;
                     for (const auto& domain : fri_params.D) {
@@ -181,9 +194,27 @@ namespace nil {
                     ));
                 }
 
+                template<typename Endianness, typename CommitmentParamsType,
+                    typename std::enable_if<is_fri_commitment<CommitmentParamsType>::value, bool>::type = true>
+                CommitmentParamsType
+                make_commitment_params(const typename commitment_params<nil::marshalling::field_type<Endianness>, CommitmentParamsType>::type &filled_params) {
+                    auto step_list = make_integer_vector<Endianness, std::size_t>(std::get<5>(filled_params.value()));
+                    std::size_t r = std::accumulate(step_list.begin(), step_list.end(), 0);
+                    std::size_t max_degree = std::get<3>(filled_params.value()).value();
+                    std::size_t expand_factor = std::get<6>(filled_params.value()).value();
+                    auto D =  math::calculate_domain_set<typename CommitmentParamsType::field_type>(r + expand_factor + 1, r);
+                    // TODO: check generators correctness
+                    return CommitmentParamsType(
+                        max_degree,
+                        D,
+                        step_list,
+                        expand_factor
+                    );
+                }
+
                 // Define commitment_params marshalling type for KZG.
                 template<typename Endianness, typename CommitmentParamsType>
-                struct commitment_params<Endianness, CommitmentParamsType,
+                struct commitment_params<nil::marshalling::field_type<Endianness>, CommitmentParamsType,
                     typename std::enable_if_t<is_kzg_commitment<CommitmentParamsType>::value>> {
                     using TTypeBase = typename nil::marshalling::field_type<Endianness>;
 
@@ -202,10 +233,10 @@ namespace nil {
                 // Marshalling function for KZG params.
                 template<typename Endianness, typename CommitmentParamsType,
                     typename std::enable_if<is_kzg_commitment<CommitmentParamsType>::value, bool>::type = true>
-                typename commitment_params<Endianness, CommitmentParamsType>::type
+                typename commitment_params<nil::marshalling::field_type<Endianness>, CommitmentParamsType>::type
                 fill_commitment_params(const CommitmentParamsType &kzg_params) {
                     using TTypeBase = typename nil::marshalling::field_type<Endianness>;
-                    using result_type = typename commitment_params<Endianness, CommitmentParamsType>::type;
+                    using result_type = typename commitment_params<TTypeBase, CommitmentParamsType>::type;
 
                     return result_type(std::make_tuple(
                         nil::crypto3::marshalling::types::fill_field_element_vector<
@@ -217,10 +248,10 @@ namespace nil {
                 // Marshalling function for dummy params.
                 template<typename Endianness, typename CommitmentParamsType,
                     typename std::enable_if<!is_kzg_commitment<CommitmentParamsType>::value && !is_fri_commitment<CommitmentParamsType>::value, bool>::type = true>
-                typename commitment_params<Endianness, CommitmentParamsType>::type
+                typename commitment_params<nil::marshalling::field_type<Endianness>, CommitmentParamsType>::type
                 fill_commitment_params(const CommitmentParamsType &dummy_params) {
                     using TTypeBase = typename nil::marshalling::field_type<Endianness>;
-                    using result_type = typename commitment_params<Endianness, CommitmentParamsType>::type;
+                    using result_type = typename commitment_params<TTypeBase, CommitmentParamsType>::type;
 
                     return result_type(std::make_tuple(
                         nil::marshalling::types::integral<TTypeBase, std::size_t>(0),

@@ -39,6 +39,7 @@
 
 #include <nil/crypto3/marshalling/algebra/types/field_element.hpp>
 
+#include <nil/crypto3/marshalling/zk/types/commitments/commitment_params.hpp>
 #include <nil/crypto3/marshalling/zk/types/commitments/lpc.hpp>
 #include <nil/crypto3/marshalling/containers/types/merkle_proof.hpp>
 
@@ -64,10 +65,17 @@ namespace nil {
                             nil::marshalling::option::sequence_size_field_prefix<nil::marshalling::types::integral<TTypeBase, std::size_t>>
                         >,
 
-//                      std::size_t rows_amount;
+//                      std::size_t witness_columns;
                         nil::marshalling::types::integral<TTypeBase, std::size_t>,
-
+//                      std::size_t public_input_columns;
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>,
+//                      std::size_t constant_columns;
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>,
+//                      std::size_t selector_columns;
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>,
 //                      std::size_t usable_rows_amount;
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>,
+//                      std::size_t rows_amount;
                         nil::marshalling::types::integral<TTypeBase, std::size_t>,
 
 //                      std::size_t max_gates_degree;
@@ -77,7 +85,11 @@ namespace nil {
                         nil::marshalling::types::array_list <TTypeBase,
                             nil::marshalling::types::integral<TTypeBase, octet_type>,
                             nil::marshalling::option::sequence_size_field_prefix<nil::marshalling::types::integral<TTypeBase, std::size_t>>
-                        >
+                        >,
+//                      commitment_scheme_type::params::type
+                        typename nil::crypto3::marshalling::types::commitment_params<
+                            TTypeBase, typename CommonDataType::commitment_params_type
+                        >::type
                     >
                 >;
 
@@ -134,19 +146,27 @@ namespace nil {
                         }
                     }
 
+                    auto filled_commitment_params = fill_commitment_params<Endianness, typename CommonDataType::commitment_params_type>(
+                        common_data.commitment_params
+                    );
+
                     return result_type(std::make_tuple(
                         filled_commitments,
                         filled_columns_rotations,
-                        nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.rows_amount),
-                        nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.usable_rows_amount),
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.desc.witness_columns),
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.desc.public_input_columns),
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.desc.constant_columns),
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.desc.selector_columns),
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.desc.usable_rows_amount),
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.desc.rows_amount),
                         nil::marshalling::types::integral<TTypeBase, std::size_t>(common_data.max_gates_degree),
-                        filled_constraint_system_with_params_hash
+                        filled_constraint_system_with_params_hash,
+                        filled_commitment_params
                     ));
                 }
 
                 template<typename Endianness, typename CommonDataType>
-                CommonDataType
-                make_placeholder_common_data(const
+                CommonDataType make_placeholder_common_data(const
                     placeholder_common_data<nil::marshalling::field_type<Endianness>, CommonDataType> &filled_common_data
                 ){
                     auto fixed_values = make_commitment<Endianness, typename CommonDataType::commitment_scheme_type>(std::get<0>(filled_common_data.value()));
@@ -161,9 +181,15 @@ namespace nil {
                         }
                     }
 
-                    auto rows_amount = std::get<2>(filled_common_data.value()).value();
-                    auto usable_rows_amount = std::get<3>(filled_common_data.value()).value();
-                    auto max_gates_degree = std::get<4>(filled_common_data.value()).value();
+                    typename CommonDataType::table_description_type desc(
+                        std::get<2>(filled_common_data.value()).value(),
+                        std::get<3>(filled_common_data.value()).value(),
+                        std::get<4>(filled_common_data.value()).value(),
+                        std::get<5>(filled_common_data.value()).value(),
+                        std::get<6>(filled_common_data.value()).value(),
+                        std::get<7>(filled_common_data.value()).value()
+                    );
+                    std::size_t max_gates_degree = std::get<8>(filled_common_data.value()).value();
 
                     typename CommonDataType::commitments_type commitments;
                     commitments.fixed_values = fixed_values;
@@ -172,20 +198,28 @@ namespace nil {
                     vk.fixed_values_commitment = fixed_values;
                     if constexpr(nil::crypto3::hashes::is_poseidon<typename CommonDataType::transcript_hash_type>::value){
                         std::vector<std::uint8_t> blob;
-                        for( std::size_t i = 0; i < std::get<5>(filled_common_data.value()).value().size(); i++){
-                            blob.push_back(std::uint8_t(std::get<5>(filled_common_data.value()).value()[i].value()));
+                        for( std::size_t i = 0; i < std::get<9>(filled_common_data.value()).value().size(); i++){
+                            blob.push_back(std::uint8_t(std::get<9>(filled_common_data.value()).value()[i].value()));
                         }
                         typename CommonDataType::field_type::integral_type newval;
                         import_bits(newval, blob.begin(), blob.end(), 8, false);
                         vk.constraint_system_with_params_hash = typename CommonDataType::field_type::value_type(newval);
                     } else {
-                        for( std::size_t i = 0; i < std::get<5>(filled_common_data.value()).value().size(); i++){
-                            vk.constraint_system_with_params_hash[i] = (std::get<5>(filled_common_data.value()).value()[i].value());
+                        for( std::size_t i = 0; i < std::get<9>(filled_common_data.value()).value().size(); i++){
+                            vk.constraint_system_with_params_hash[i] = (std::get<9>(filled_common_data.value()).value()[i].value());
                         }
                     }
 
+                    typename CommonDataType::commitment_params_type commitment_params = make_commitment_params<
+                        Endianness, typename CommonDataType::commitment_params_type
+                    >(std::get<10>(filled_common_data.value()));
+                    typename CommonDataType::commitment_scheme_data_type commitment_data;
 
-                    return CommonDataType(commitments, columns_rotations, rows_amount, usable_rows_amount, max_gates_degree, vk);
+                    return CommonDataType(
+                        commitments, columns_rotations,
+                        desc, max_gates_degree, vk,
+                        commitment_params, commitment_data
+                    );
                 }
             }    // namespace types
         }        // namespace marshalling

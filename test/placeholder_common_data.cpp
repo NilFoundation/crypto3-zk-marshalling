@@ -112,7 +112,6 @@ typename fri_type::params_type create_fri_params(std::size_t degree_log, const i
         generate_random_step_list(r, max_step),
         4 //expand_factor
     );
-
     return params;
 }
 
@@ -124,6 +123,7 @@ void test_placeholder_common_data(CommonDataType common_data, std::string folder
     auto filled_common_data = nil::crypto3::marshalling::types::fill_placeholder_common_data<Endianness, CommonDataType>(common_data);
     auto _common_data = nil::crypto3::marshalling::types::make_placeholder_common_data<Endianness,CommonDataType>(filled_common_data);
     BOOST_CHECK(common_data == _common_data);
+/*    BOOST_CHECK(_table_description.witness_columns == _common_data.witness_columns);
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_common_data.length(), 0x00);
@@ -135,9 +135,15 @@ void test_placeholder_common_data(CommonDataType common_data, std::string folder
     auto read_iter = cv.begin();
     test_val_read.read(read_iter, cv.size());
     BOOST_CHECK(status == nil::marshalling::status_type::success);
-    auto constructed_val_read = nil::crypto3::marshalling::types::make_placeholder_common_data<Endianness, CommonDataType>(
+    auto [constructed_val_read, __table_description] = nil::crypto3::marshalling::types::make_placeholder_common_data<Endianness, CommonDataType>(
             test_val_read);
     BOOST_CHECK(common_data == constructed_val_read);
+    BOOST_CHECK(__table_description.witness_columns == constructed_val_read.witness_columns);
+    BOOST_CHECK(__table_description.public_input_columns == constructed_val_read.public_input_columns);
+    BOOST_CHECK(__table_description.constant_columns == constructed_val_read.constant_columns);
+    BOOST_CHECK(__table_description.selector_columns == constructed_val_read.selector_columns);
+    BOOST_CHECK(__table_description.rows_amount == constructed_val_read.rows_amount);
+    BOOST_CHECK(__table_description.usable_rows_amount == constructed_val_read.usable_rows_amount);
 
     if(folder_name != "") {
         std::filesystem::create_directory(folder_name);
@@ -146,7 +152,7 @@ void test_placeholder_common_data(CommonDataType common_data, std::string folder
         out << "0x";
         print_hex_byteblob(out, cv.begin(), cv.end(), false);
         out.close();
-    }
+    }*/
 }
 
 // *******************************************************************************

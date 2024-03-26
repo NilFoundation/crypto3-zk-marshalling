@@ -245,21 +245,6 @@ void print_placeholder_proof_with_params(
     );
 }
 
-template<typename fri_type, typename FieldType>
-typename fri_type::params_type create_fri_params(std::size_t degree_log, const int max_step = 1) {
-    std::size_t expand_factor = 4;
-    std::size_t r = degree_log - 1;
-
-    typename fri_type::params_type params(
-        (1 << degree_log) - 1, // max_degree
-        math::calculate_domain_set<FieldType>(degree_log + expand_factor, r),
-        generate_random_step_list(r, max_step),
-        4 //expand_factor
-    );
-
-    return params;
-}
-
 template<typename ColumnType>
 void print_public_input(ColumnType &public_input, std::string filename){
     std::size_t max_non_zero = 0;
@@ -356,10 +341,8 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit1_poseidon)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         merkle_hash_type,
         transcript_hash_type,
-        placeholder_test_params::lambda,
         placeholder_test_params::m,
-        true,
-        crypto3::zk::commitments::proof_of_work<transcript_hash_type, std::uint32_t, 0xFFFF8000 >
+        crypto3::zk::commitments::proof_of_work<transcript_hash_type, std::uint32_t>
     >;
 
     using lpc_type = commitments::list_polynomial_commitment<field_type, lpc_params_type>;
@@ -391,7 +374,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
 
 
-    typename lpc_type::fri_type::params_type fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(
+        1, table_rows_log, placeholder_test_params::lambda, 4, true, 0xFFFF8000
+    );
     lpc_scheme_type lpc_scheme(fri_params);
 
     typename placeholder_public_preprocessor<field_type, lpc_placeholder_params_type>::preprocessed_data_type
@@ -454,10 +439,8 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit1)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         merkle_hash_type,
         transcript_hash_type,
-        placeholder_test_params::lambda,
         placeholder_test_params::m,
-        true,
-        crypto3::zk::commitments::proof_of_work<transcript_hash_type, std::uint32_t, 0xFFFF8000 >
+        crypto3::zk::commitments::proof_of_work<transcript_hash_type, std::uint32_t>
     >;
 
     using lpc_type = commitments::list_polynomial_commitment<field_type, lpc_params_type>;
@@ -489,7 +472,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
 
 
-    typename lpc_type::fri_type::params_type fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(
+        1, table_rows_log, placeholder_test_params::lambda, 4, true, 0xFFFF8000
+    );
     lpc_scheme_type lpc_scheme(fri_params);
 
     typename placeholder_public_preprocessor<field_type, lpc_placeholder_params_type>::preprocessed_data_type
@@ -552,7 +537,6 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         typename placeholder_test_params::merkle_hash_type,
         typename placeholder_test_params::transcript_hash_type,
-        placeholder_test_params::lambda,
         placeholder_test_params::m
     >;
 
@@ -588,7 +572,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer){
     bool verifier_res;
 
     // LPC commitment scheme
-    typename lpc_type::fri_type::params_type fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(
+        1, table_rows_log, placeholder_test_params::lambda, 4
+    );
     lpc_scheme_type lpc_scheme(fri_params);
 
     typename placeholder_public_preprocessor<field_type, lpc_placeholder_params_type>::preprocessed_data_type
@@ -649,9 +635,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit3)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         typename placeholder_test_params::merkle_hash_type,
         typename placeholder_test_params::transcript_hash_type,
-        placeholder_test_params::lambda,
-        placeholder_test_params::m,
-        true
+        placeholder_test_params::m
     >;
 
     using lpc_type = commitments::list_polynomial_commitment<field_type, lpc_params_type>;
@@ -680,7 +664,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
-    auto fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(
+        1, table_rows_log, placeholder_test_params::lambda, 4, true
+    );
     lpc_scheme_type lpc_scheme(fri_params);
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -740,9 +726,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit4)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         typename placeholder_test_params::merkle_hash_type,
         typename placeholder_test_params::transcript_hash_type,
-        placeholder_test_params::lambda,
-        placeholder_test_params::m,
-        true
+        placeholder_test_params::m
     >;
 
     using lpc_type = commitments::list_polynomial_commitment<field_type, lpc_params_type>;
@@ -771,7 +755,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
-    auto fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(
+        1, table_rows_log, placeholder_test_params::lambda, 4, true
+    );
     lpc_scheme_type lpc_scheme(fri_params);
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -831,9 +817,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit6)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         typename placeholder_test_params::merkle_hash_type,
         typename placeholder_test_params::transcript_hash_type,
-        placeholder_test_params::lambda,
-        placeholder_test_params::m,
-        true
+        placeholder_test_params::m
     >;
 
     using lpc_type = commitments::list_polynomial_commitment<field_type, lpc_params_type>;
@@ -862,7 +846,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
-    auto fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(
+        1, table_rows_log, placeholder_test_params::lambda, 4, true
+    );
     lpc_scheme_type lpc_scheme(fri_params);
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -917,9 +903,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit7)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         typename placeholder_test_params::merkle_hash_type,
         typename placeholder_test_params::transcript_hash_type,
-        placeholder_test_params::lambda,
-        placeholder_test_params::m,
-        true
+        placeholder_test_params::m
     >;
 
     using lpc_type = commitments::list_polynomial_commitment<field_type, lpc_params_type>;
@@ -948,7 +932,9 @@ BOOST_FIXTURE_TEST_CASE(proof_marshalling_test, test_initializer) {
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
-    auto fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(
+        1, table_rows_log, placeholder_test_params::lambda, 4, true
+    );
     lpc_scheme_type lpc_scheme(fri_params);
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};

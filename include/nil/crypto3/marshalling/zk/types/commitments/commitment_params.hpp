@@ -184,8 +184,7 @@ namespace nil {
                     return result_type(std::make_tuple(
                         nil::marshalling::types::integral<TTypeBase, std::size_t>(fri_params.lambda),
                         nil::marshalling::types::integral<TTypeBase, std::size_t>(fri_params.m),
-                        nil::marshalling::types::integral<TTypeBase, std::size_t>(
-                            fri_params.use_grinding ? CommitmentParamsType::grinding_type::mask: 0),
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>(fri_params.use_grinding?fri_params.grinding_parameter:0),
                         nil::marshalling::types::integral<TTypeBase, std::size_t>(fri_params.max_degree),
                         nil::crypto3::marshalling::types::fill_field_element_vector<
                             typename FieldType::value_type, Endianness>(D_unity_roots),
@@ -199,16 +198,22 @@ namespace nil {
                 CommitmentParamsType
                 make_commitment_params(const typename commitment_params<nil::marshalling::field_type<Endianness>, CommitmentParamsType>::type &filled_params) {
                     auto step_list = make_integer_vector<Endianness, std::size_t>(std::get<5>(filled_params.value()));
+                    std::size_t lambda = std::get<0>(filled_params.value()).value();
                     std::size_t r = std::accumulate(step_list.begin(), step_list.end(), 0);
                     std::size_t max_degree = std::get<3>(filled_params.value()).value();
                     std::size_t expand_factor = std::get<6>(filled_params.value()).value();
+                    std::size_t grinding_parameter = std::get<2>(filled_params.value()).value();
                     auto D =  math::calculate_domain_set<typename CommitmentParamsType::field_type>(r + expand_factor + 1, r);
                     // TODO: check generators correctness
+
                     return CommitmentParamsType(
                         max_degree,
                         D,
                         step_list,
-                        expand_factor
+                        expand_factor,
+                        lambda,
+                        (grinding_parameter != 0),
+                        grinding_parameter
                     );
                 }
 

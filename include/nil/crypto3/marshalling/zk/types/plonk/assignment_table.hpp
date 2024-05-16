@@ -42,6 +42,19 @@ namespace nil {
         namespace marshalling {
             namespace types {
 
+                template<typename TTypeBase>
+                using table_header_type = nil::marshalling::types::bundle<
+                    TTypeBase, std::tuple<
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>, // witness_amount
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>, // public_input_amount
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>, // constant_amount
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>, // selector_amount
+
+                        nil::marshalling::types::integral<TTypeBase, std::size_t>, // usable_rows
+                        nil::marshalling::types::integral<TTypeBase, std::size_t> // rows_amount
+                    >
+                >;
+
                 template<typename TTypeBase, typename PlonkTable>
                 using plonk_assignment_table = nil::marshalling::types::bundle<
                     TTypeBase, std::tuple<

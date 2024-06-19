@@ -55,6 +55,19 @@ namespace nil {
                     >
                 >;
 
+                template<typename TTypeBase, typename BlueprintFieldType>
+                using one_column_type_marshalling_type =
+                    nil::marshalling::types::array_list<
+                        TTypeBase,
+                        nil::crypto3::marshalling::types::field_element<
+                            TTypeBase,
+                            typename BlueprintFieldType::value_type>,
+                        nil::marshalling::option::sequence_size_field_prefix<
+                            nil::marshalling::types::integral<TTypeBase, std::size_t>
+                        >
+                    >;
+
+
                 template<typename TTypeBase, typename PlonkTable>
                 using plonk_assignment_table = nil::marshalling::types::bundle<
                     TTypeBase, std::tuple<
